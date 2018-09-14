@@ -34,7 +34,7 @@ gdb:
 ASM = nasm
 ASMFLAGS = -f bin
 
-%.o: %.asm
+build/%.o: %.asm
 	$(ASM) $(ASMFLAGS) $^ -o $@
 
 
