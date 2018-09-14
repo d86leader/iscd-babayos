@@ -1,3 +1,4 @@
+; vim: set ft=nasm ts=2 sw=2 expandtab
 [BITS 16]
 
 org 0x7c00
