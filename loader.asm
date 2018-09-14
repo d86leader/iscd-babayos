@@ -20,17 +20,6 @@ mov es, ax
 mov di, 0x0
 
 ;;;;;; STRING MACRO SECTION ;;;;;
-%macro defwhitechar 1
-  db 0x07
-  db %1
-%endmacro
-%macro defwhitestring 1-*
-  %rep %0
-    defwhitechar %1
-    %rotate 1
-  %endrep
-%endmacro
-
 %macro putwhitechar 1
   mov [es:di], word ((0x07 << 8) + %1)
   inc di
