@@ -18,40 +18,34 @@ mov ax, 0xb800
 mov es, ax
 mov di, 0x0
 
+;;;;;; STRING MACRO SECTION ;;;;;
+%macro defwhitechar 1
+  db 0x07
+  db %1
+%endmacro
+%macro defwhitestring 1-*
+  %rep %0
+    defwhitechar %1
+    %rotate 1
+  %endrep
+%endmacro
+
+%macro putwhitechar 1
+  mov [es:di], word ((0x07 << 8) + %1)
+  inc di
+  inc di
+%endmacro
+%macro putwhitestring 1-*
+  %rep %0
+    putwhitechar %1
+    %rotate 1
+  %endrep
+%endmacro
+;;;;;; END STRING MACRO SECTION ;;;;;
+
 fill_screen:
-mov [es:di], word 0x0748 ;; H
-inc di
-inc di
-mov [es:di], word 0x0765 ;; e
-inc di
-inc di
-mov [es:di], word 0x076c ;; l
-inc di
-inc di
-mov [es:di], word 0x076c ;; l
-inc di
-inc di
-mov [es:di], word 0x076f ;; o
-inc di
-inc di
-mov [es:di], word 0x0720 ;; <space>
-inc di
-inc di
-mov [es:di], word 0x0777 ;; w
-inc di
-inc di
-mov [es:di], word 0x076f ;; o
-inc di
-inc di
-mov [es:di], word 0x0772 ;; r
-inc di
-inc di
-mov [es:di], word 0x076c ;; l
-inc di
-inc di
-mov [es:di], word 0x0764 ;; d
-inc di
-inc di
+putwhitestring "H", "e", "l", "l", "o", ",", " ", "w", "o", "r", "l", "d"
+
 
 spaces:
 mov [es:di], word 0x0720 ;; <space>
