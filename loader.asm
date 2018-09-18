@@ -41,7 +41,7 @@ spaces:
 mov [es:di], word 0x0720 ;; <space>
 inc di
 inc di
-cmp di, 80*20
+cmp di, 80*25*2
 jb spaces
 
 
