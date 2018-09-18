@@ -12,36 +12,51 @@ mov gs, ax
 mov ss, ax
 jmp 0x0:start
 
+;; DATA SECTION
+
+message:
+  db "hello BIOS world", 0
+
+;; START
+
 start:
+;; select active page
+xor al, al ;; page 0
+mov ah, 0x5
+int 0x10
 
-;; set es to be video memory segment
-mov ax, 0xb800
-mov es, ax
-mov di, 0x0
+;; set cursor to position:
+xor bh, bh ;; page 0
+xor dh, dh ;; row 0
+xor dl, dl ;; col 0
+mov ah, 0x2
+int 0x10
 
-;;;;;; STRING MACRO SECTION ;;;;;
-%macro putwhitechar 1
-  mov [es:di], word ((0x07 << 8) + %1)
-  inc di
-  inc di
-%endmacro
-%macro putwhitestring 1-*
-  %rep %0
-    putwhitechar %1
-    %rotate 1
-  %endrep
-%endmacro
-;;;;;; END STRING MACRO SECTION ;;;;;
 
-fill_screen:
-putwhitestring "H", "e", "l", "l", "o", ",", " ", "w", "o", "r", "l", "d"
+;; load pointer to source text
+mov si, message
+;; reset symbol counter
+xor cx, cx
+
+print_char:
+;; load char, quit if zero
+lodsb
+test al, al
+jz spaces
+
+mov ah, 0xe ;; print char
+int 0x10
+
+inc cx
+jmp print_char
 
 
 spaces:
-mov [es:di], word 0x0720 ;; <space>
-inc di
-inc di
-cmp di, 80*25*2
+mov al, 0x20
+mov ah, 0xe
+int 0x10
+inc cx
+cmp cx, 80*25 - 1
 jb spaces
 
 
