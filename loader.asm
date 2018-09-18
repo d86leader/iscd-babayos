@@ -59,6 +59,9 @@ inc cx
 cmp cx, 80*25 - 1
 jb spaces
 
+exit:
+xor al, al
+out 0xf4, al
 
 loop_mark:
 jmp loop_mark
