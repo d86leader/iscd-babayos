@@ -49,27 +49,26 @@ spaces:
 mov si, message
 call putstr
 
-jmp loop_mark
-
 ;; ----- Read next sector ----- ;;
 
-;; read first
-;; from:
-xor cx, cx ;; cylinder 0, sector 0
-inc cl
-inc cl     ;; sector 2. Starting sector is probably one
-xor dh, dh ;; head 0
-mov dl, 0x80 ;; first disk drive
-;; to:
-;; es already set to 0
-mov bx, 0x7c00 + 512 ;; just after this code
-;; amount to load
-mov al, 1
-;; perform
-mov ah, 2
-int 0x13
 
 ;; print the string in loaded segment
+
+mov di, 0x7c00 + 512
+xor cx, cx
+inc cl
+inc cl
+call load_sector ;; load sector 2
+
+mov si, 0x7c00 + 512
+call putstr
+
+mov di, 0x7c00 + 512
+xor cx, cx
+inc cl
+inc cl
+inc cl
+call load_sector ;; load sector 3
 
 mov si, 0x7c00 + 512
 call putstr
@@ -77,11 +76,13 @@ call putstr
 loop_mark:
 jmp loop_mark
 
+; exit {{{
 exit:
-xor al, al
-out 0xf4, al
+  xor al, al
+  out 0xf4, al
+; }}}
 
-
+; putstr {{{
 ;; ARGS
 ;;    ds:si - string to put, 0-terminated
 ;;  NO regs preserved
@@ -96,13 +97,33 @@ putstr:
   mov ah, 0x2
   int 0x10
 
- .putchar
+ .putchar:
   lodsb
   test al, al
-  jnz .exit
+  jz .exit
   mov ah, 0xe
   int 0x10
   jmp .putchar
 
  .exit: ret
+; }}}
 
+; load_sector {{{
+;; ARGS:
+;;    es:di - destination
+;;    cx - cylinder:sector (ch:cl)
+load_sector:
+  ;; from:
+  xor dh, dh ;; head 0
+  mov dl, 0x80 ;; first disk drive
+  ;; to:
+  ;; es already set to 0
+  mov bx, di ;; just after this code
+  ;; amount to load
+  mov al, 1
+  ;; perform
+  mov ah, 2
+  int 0x13
+
+  ret
+; }}}
