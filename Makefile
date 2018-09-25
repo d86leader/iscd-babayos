@@ -41,6 +41,7 @@ build/%.o: %.asm
 #making a bootable disk with loader
 
 $(DISKNAME): $(LOADERNAME)
+	dd if=/dev/zero of=$@ bs=1M count=1
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
 	#copy magic number to the end
 	dd if=$(MAGICNUMBERFILE) of=$@ bs=1 oflag=seek_bytes seek=510 conv=notrunc
