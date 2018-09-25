@@ -40,8 +40,10 @@ build/%.o: %.asm
 
 #making a bootable disk with loader
 
-$(DISKNAME): $(LOADERNAME)
+$(DISKNAME): $(LOADERNAME) build/test_sector.o
 	dd if=/dev/zero of=$@ bs=1M count=1
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
 	#copy magic number to the end
 	dd if=$(MAGICNUMBERFILE) of=$@ bs=1 oflag=seek_bytes seek=510 conv=notrunc
+	#copy new sector to the end
+	dd if=build/test_sector.o of=$@ bs=1 count=512 conv=notrunc oflag=seek_bytes seek=512
