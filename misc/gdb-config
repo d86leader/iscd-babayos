@@ -3,4 +3,5 @@ set disassembly-flavor intel
 
 target remote localhost:1234
 layout regs
+focus cmd
 break *0x7c00
