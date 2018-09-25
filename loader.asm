@@ -56,21 +56,13 @@ call putstr
 
 mov di, 0x7c00 + 512
 xor cx, cx
-inc cl
-inc cl
-call load_sector ;; load sector 2
+mov cl, 2
+mov al, 2
+call load_sector ;; load sectors 2-3
 
 mov si, 0x7c00 + 512
 call putstr
-
-mov di, 0x7c00 + 512
-xor cx, cx
-inc cl
-inc cl
-inc cl
-call load_sector ;; load sector 3
-
-mov si, 0x7c00 + 512
+mov si, 0x7c00 + 1024
 call putstr
 
 loop_mark:
@@ -112,15 +104,13 @@ putstr:
 ;; ARGS:
 ;;    es:di - destination
 ;;    cx - cylinder:sector (ch:cl)
+;;    al - amount of sectors to load
 load_sector:
   ;; from:
   xor dh, dh ;; head 0
   mov dl, 0x80 ;; first disk drive
   ;; to:
-  ;; es already set to 0
   mov bx, di ;; just after this code
-  ;; amount to load
-  mov al, 1
   ;; perform
   mov ah, 2
   int 0x13
