@@ -39,25 +39,25 @@ mov si, message
 xor cx, cx
 
 print_char:
-;; load char, quit if zero
-lodsb
-test al, al
-jz spaces
+  ;; load char, quit if zero
+  lodsb
+  test al, al
+  jz spaces
 
-mov ah, 0xe ;; print char
-int 0x10
+  mov ah, 0xe ;; print char
+  int 0x10
 
-inc cx
-jmp print_char
+  inc cx
+  jmp print_char
 
 
 spaces:
-mov al, 0x20
-mov ah, 0xe
-int 0x10
-inc cx
-cmp cx, 80*25 - 1
-jb spaces
+  mov al, 0x20
+  mov ah, 0xe
+  int 0x10
+  inc cx
+  cmp cx, 80*25 - 1
+  jb spaces
 
 loop_mark:
 jmp loop_mark
