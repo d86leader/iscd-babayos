@@ -6,10 +6,12 @@ org 0x7c00
 ;; reset segment registers
 mov ax, 0x0
 mov ds, ax
-mov es, ax
 mov fs, ax
 mov gs, ax
 mov ss, ax
+;; es will point to screen
+mov ax, 0xb800
+mov es, ax
 jmp 0x0:start
 
 ;; ----- DATA SECTION ----- ;;
@@ -23,27 +25,16 @@ start:
 
 ;; ----- Fill screen with spaces ----- ;;
 
-;; select active page
-xor al, al ;; page 0
-mov ah, 0x5
-int 0x10
-
-;; set cursor to position:
-xor bh, bh ;; page 0
-xor dh, dh ;; row 0
-xor dl, dl ;; col 0
-mov ah, 0x2
-int 0x10
+;; es:di points to screen memory start
+mov di, 0x0
+;; load space to ax
+mov ax, 0x0720
 
 ;; char printing loop
-xor cx, cx
 spaces:
-  mov al, 0x20
-  mov ah, 0xe
-  int 0x10
-  inc cx
-  cmp cx, 80*25 - 1
-  jb spaces
+ stosw
+ cmp di, 80*25*2
+ jb spaces
 
 ;; ----- Put greeting ----- ;;
 mov si, message
@@ -78,24 +69,29 @@ exit:
 ;; ARGS
 ;;    ds:si - string to put, 0-terminated
 ;;  NO regs preserved
-last_cursor_pos: db -1
+current_line: dw 0
 putstr:
-;; set cursor to position:
-  mov dh, [last_cursor_pos]
-  inc dh
-  mov [last_cursor_pos], dh
-  xor bh, bh ;; page 0
-  xor dl, dl ;; col 0
-  mov ah, 0x2
-  int 0x10
+ ;; assuming es points to video memory
+ ;; load current line address to di
+ mov di, [current_line]
 
  .putchar:
   lodsb
   test al, al
-  jz .exit
-  mov ah, 0xe
-  int 0x10
+  jz .inc_line
+  stosb
+  mov al, 0x07
+  stosb
   jmp .putchar
+
+ .inc_line:
+ ;; increment current line, loop to start if too big
+  mov ax, [current_line]
+  add ax, 80
+  cmp ax, 25*80
+  jb .exit
+  xor ax, ax
+  mov [current_line], ax
 
  .exit: ret
 ; }}}
