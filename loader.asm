@@ -22,7 +22,11 @@ success:
 a20_error_string:
   db "error calling bios a20 enable",0
 
-; gdt_entry {{{
+gdt_descriptor:
+  dw plain_gdt.size
+  dd plain_gdt
+
+; struc gdt_entry {{{
 struc gdt_entry
   .limit16: resw 1
   .base16:  resw 1
@@ -36,33 +40,35 @@ endstruc
 
 ; plain_gdt {{{
 plain_gdt:
+.size equ .end - $ - 1
 ;; zero entry
 istruc gdt_entry
-  at gdt_entry.base16:  dw 0
-  at gdt_entry.base24:  db 0
-  at gdt_entry.base32:  db 0
-  at gdt_entry.access:  db 0
-  at gdt_entry.limit16: dw 0
-  at gdt_entry.limit20_flags: db 0
+  at gdt_entry.limit16, dw 0
+  at gdt_entry.base16,  dw 0
+  at gdt_entry.base24,  db 0
+  at gdt_entry.access,  db 0
+  at gdt_entry.limit20_flags, db 0
+  at gdt_entry.base32,  db 0
 iend
-;; code sector: 0x8
+;; code sector, 0x8
 istruc gdt_entry
-  at gdt_entry.base16:  dw 0
-  at gdt_entry.base24:  db 0
-  at gdt_entry.base32:  db 0
-  at gdt_entry.access:  db 10011010b
-  at gdt_entry.limit16: dw 0xffff
-  at gdt_entry.limit20_flags: db (1100b << 4) | 0xff
+  at gdt_entry.limit16, dw 0xffff
+  at gdt_entry.base16,  dw 0
+  at gdt_entry.base24,  db 0
+  at gdt_entry.access,  db 10011010b
+  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
+  at gdt_entry.base32,  db 0
 iend
-;; data sector: 0x10
+;; data sector, 0x10
 istruc gdt_entry
-  at gdt_entry.base16:  dw 0
-  at gdt_entry.base24:  db 0
-  at gdt_entry.base32:  db 0
-  at gdt_entry.access:  db 10010010b
-  at gdt_entry.limit16: dw 0xffff
-  at gdt_entry.limit20_flags: db (1100b << 4) | 0xff
+  at gdt_entry.limit16, dw 0xffff
+  at gdt_entry.base16,  dw 0
+  at gdt_entry.base24,  db 0
+  at gdt_entry.access,  db 10010010b
+  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
+  at gdt_entry.base32,  db 0
 iend
+.end:
 ; }}}
 
 
@@ -122,7 +128,7 @@ jc a20_error
 ;; ----- Enter protected mode ----- ;;
 
 cli
-lgdt plain_gdt
+lgdt [gdt_descriptor]
 mov eax, cr0
 or al, 1
 mov cr0, eax
