@@ -22,6 +22,50 @@ success:
 a20_error_string:
   db "error calling bios a20 enable",0
 
+; gdt_entry {{{
+struc gdt_entry
+  .limit16: resw 1
+  .base16:  resw 1
+  .base24:  resb 1
+  .access:  resb 1
+  .limit20_flags: resb 1
+  .base32:  resb 1
+  .size:
+endstruc
+; }}}
+
+; plain_gdt {{{
+plain_gdt:
+;; zero entry
+istruc gdt_entry
+  at gdt_entry.base16:  dw 0
+  at gdt_entry.base24:  db 0
+  at gdt_entry.base32:  db 0
+  at gdt_entry.access:  db 0
+  at gdt_entry.limit16: dw 0
+  at gdt_entry.limit20_flags: db 0
+iend
+;; code sector: 0x8
+istruc gdt_entry
+  at gdt_entry.base16:  dw 0
+  at gdt_entry.base24:  db 0
+  at gdt_entry.base32:  db 0
+  at gdt_entry.access:  db 10011010b
+  at gdt_entry.limit16: dw 0xffff
+  at gdt_entry.limit20_flags: db (1100b << 4) | 0xff
+iend
+;; data sector: 0x10
+istruc gdt_entry
+  at gdt_entry.base16:  dw 0
+  at gdt_entry.base24:  db 0
+  at gdt_entry.base32:  db 0
+  at gdt_entry.access:  db 10010010b
+  at gdt_entry.limit16: dw 0xffff
+  at gdt_entry.limit20_flags: db (1100b << 4) | 0xff
+iend
+; }}}
+
+
 ;; ----- START ----- ;;
 
 start:
@@ -40,6 +84,7 @@ spaces:
  jb spaces
 
 ;; ----- Put greeting ----- ;;
+
 mov si, message
 call putstr
 
@@ -64,15 +109,27 @@ mov si, 0x7c00 + 1024
 call putstr
 
 ;; ----- Put success message ----- ;;
+
 mov si, success
 call putstr
 
-;; ----- enable A20 line ----- ;;
+;; ----- Enable A20 line ----- ;;
 
 mov ax, 0x2401
 int 0x15
 jc a20_error
 
+;; ----- Enter protected mode ----- ;;
+
+cli
+lgdt plain_gdt
+mov eax, cr0
+or al, 1
+mov cr0, eax
+
+jmp 0x8:0x7e00
+
+;; protected mode comes after this
 
 
 loop_mark:
