@@ -44,15 +44,19 @@ call putstr
 
 ;; ----- Read next sector ----- ;;
 
-
-;; print the string in loaded segment
-
+;; load_sector uses es for loading destination
+xor ax, ax
+mov es, ax
 mov di, 0x7c00 + 512
 xor cx, cx
 mov cl, 2
 mov al, 2
 call load_sector ;; load sectors 2-3
+;; restore es pointing to video memory
+mov ax, 0xb800
+mov es, ax
 
+;; print the string in loaded segment
 mov si, 0x7c00 + 512
 call putstr
 mov si, 0x7c00 + 1024
