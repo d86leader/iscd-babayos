@@ -18,6 +18,8 @@ jmp 0x0:start
 
 message:
   db "trying to read sector...", 0
+success:
+  db "all sectors read", 0
 
 ;; ----- START ----- ;;
 
@@ -54,6 +56,10 @@ call load_sector ;; load sectors 2-3
 mov si, 0x7c00 + 512
 call putstr
 mov si, 0x7c00 + 1024
+call putstr
+
+;; ----- Put success message ----- ;;
+mov si, success
 call putstr
 
 loop_mark:
