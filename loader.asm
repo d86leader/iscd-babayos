@@ -86,14 +86,17 @@ putstr:
 
  .inc_line:
  ;; increment current line, loop to start if too big
-  mov ax, [current_line]
-  add ax, 80
-  cmp ax, 25*80
-  jb .exit
-  xor ax, ax
-  mov [current_line], ax
+ mov ax, [current_line]
+ add ax, 80*2
+ mov [current_line], ax
+ cmp ax, 25*80*2
+ jb .exit
+ ;; was too big, put zero there
+ xor ax, ax
+ mov [current_line], ax
 
- .exit: ret
+ .exit:
+ ret
 ; }}}
 
 ; load_sector {{{
