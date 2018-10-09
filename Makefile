@@ -3,7 +3,8 @@ LOADERNAME = build/loader.o
 MAGICNUMBERFILE = misc/magic_number
 
 
-all: $(DISKNAME) run
+all: disk run
+disk: $(DISKNAME)
 
 
 # running qemu (optionally server)
@@ -41,6 +42,7 @@ build/%.o: %.asm
 #making a bootable disk with loader
 
 $(DISKNAME): $(LOADERNAME) build/test_sector.o build/sector2.o
+	[[ `du -b $(LOADERNAME)` < 255 ]] #loader too large
 	dd if=/dev/zero of=$@ bs=1M count=1
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
 	#copy magic number to the end
