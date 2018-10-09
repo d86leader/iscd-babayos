@@ -20,6 +20,8 @@ message:
   db "trying to read sector...", 0
 success:
   db "all sectors read", 0
+a20_error_string:
+  db "error calling bios a20 enable",0
 
 ;; ----- START ----- ;;
 
@@ -66,7 +68,20 @@ call putstr
 mov si, success
 call putstr
 
+;; ----- enable A20 line ----- ;;
+
+mov ax, 0x2401
+int 0x15
+jc a20_error
+
+
+
 loop_mark:
+jmp loop_mark
+
+a20_error:
+mov si, a20_error_string
+call putstr
 jmp loop_mark
 
 ; exit {{{
