@@ -1,4 +1,4 @@
-; vim: set ft=nasm ts=2 sw=2 expandtab
+; vim: ft=nasm ts=2 sw=2 expandtab
 [BITS 16]
 [ORG 0x7c00]
 
@@ -8,69 +8,27 @@ mov ds, ax
 mov fs, ax
 mov gs, ax
 mov ss, ax
-;; es will point to screen
-mov ax, 0xb800
 mov es, ax
+;; sp will point to end of chunk of convetional memory
+mov sp, 0x00007BF0
+;; initialize cs register
 jmp 0x0:start
 
 ;; ----- DATA SECTION ----- ;;
 
-message:
-  db "trying to read sector...", 0
-success:
-  db "all sectors read", 0
+util_load_success:
+  db "loaded first sector..", 0
+system_load_success:
+  db "loaded system memory", 0
 a20_error_string:
   db "error calling bios a20 enable",0
 
-gdt_descriptor:
-  dw plain_gdt.size
-  dd plain_gdt
+%define gdt_descriptor 0x500
 
-; struc gdt_entry {{{
-struc gdt_entry
-  .limit16: resw 1
-  .base16:  resw 1
-  .base24:  resb 1
-  .access:  resb 1
-  .limit20_flags: resb 1
-  .base32:  resb 1
-  .size:
-endstruc
-; }}}
-
-; plain_gdt {{{
-plain_gdt:
-.size equ .end - $ - 1
-;; zero entry
-istruc gdt_entry
-  at gdt_entry.limit16, dw 0
-  at gdt_entry.base16,  dw 0
-  at gdt_entry.base24,  db 0
-  at gdt_entry.access,  db 0
-  at gdt_entry.limit20_flags, db 0
-  at gdt_entry.base32,  db 0
-iend
-;; code sector, 0x8
-istruc gdt_entry
-  at gdt_entry.limit16, dw 0xffff
-  at gdt_entry.base16,  dw 0
-  at gdt_entry.base24,  db 0
-  at gdt_entry.access,  db 10011010b
-  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
-  at gdt_entry.base32,  db 0
-iend
-;; data sector, 0x10
-istruc gdt_entry
-  at gdt_entry.limit16, dw 0xffff
-  at gdt_entry.base16,  dw 0
-  at gdt_entry.base24,  db 0
-  at gdt_entry.access,  db 10010010b
-  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
-  at gdt_entry.base32,  db 0
-iend
-.end:
-; }}}
-
+%define functions gdt_descriptor + 6
+%define load_sector_ptr functions + 8
+%define putstr_ptr      functions + 4
+%define exit_ptr        functions + 0
 
 ;; ----- START ----- ;;
 
@@ -89,34 +47,37 @@ spaces:
  cmp di, 80*25*2
  jb spaces
 
-;; ----- Put greeting ----- ;;
+;; ----- Read sector with functions ----- ;;
 
-mov si, message
-call putstr
-
-;; ----- Read next sector ----- ;;
-
-;; load_sector uses es for loading destination
+;; this syscall uses es for loading destination
 xor ax, ax
 mov es, ax
-mov di, 0x7c00 + 512
+mov bx, gdt_descriptor ;; load to gdt_descriptor address
 xor cx, cx
-mov cl, 2
-mov al, 2
-call load_sector ;; load sectors 2-3
+mov cl, 2 ;; cylinder 0, sector 2
+mov al, 1 ;; 1 sector
+xor dh, dh ;; head 0
+mov dl, 0x80 ;; first disk drive
+
+mov ah, 2
+int 0x13 ;; execute sector loading
+
 ;; restore es pointing to video memory
 mov ax, 0xb800
 mov es, ax
 
-;; print the string in loaded segment
-mov si, 0x7c00 + 512
-call putstr
-mov si, 0x7c00 + 1024
-call putstr
+;; print success message
+mov si, util_load_success
+mov ax, [putstr_ptr]
+call ax
+
+;; ----- Read system sectors ----- ;;
+
+jmp loop_mark
 
 ;; ----- Put success message ----- ;;
 
-mov si, success
+mov si, system_load_success
 call putstr
 
 ;; ----- Enable A20 line ----- ;;
@@ -146,44 +107,15 @@ mov si, a20_error_string
 call putstr
 jmp loop_mark
 
-; exit {{{
-exit:
-  xor al, al
-  out 0xf4, al
-; }}}
-
 ; putstr {{{
 ;; ARGS
 ;;    ds:si - string to put, 0-terminated
 ;;  NO regs preserved
 current_line: dw 0
 putstr:
- ;; assuming es points to video memory
- ;; load current line address to di
- mov di, [current_line]
-
- .putchar:
-  lodsb
-  test al, al
-  jz .inc_line
-  stosb
-  mov al, 0x07
-  stosb
-  jmp .putchar
-
- .inc_line:
- ;; increment current line, loop to start if too big
- mov ax, [current_line]
- add ax, 80*2
- mov [current_line], ax
- cmp ax, 25*80*2
- jb .exit
- ;; was too big, put zero there
- xor ax, ax
- mov [current_line], ax
-
- .exit:
- ret
+  mov ax, [putstr_ptr]
+  call ax
+  ret
 ; }}}
 
 ; load_sector {{{
@@ -192,14 +124,7 @@ putstr:
 ;;    cx - cylinder:sector (ch:cl)
 ;;    al - amount of sectors to load
 load_sector:
-  ;; from:
-  xor dh, dh ;; head 0
-  mov dl, 0x80 ;; first disk drive
-  ;; to:
-  mov bx, di ;; just after this code
-  ;; perform
-  mov ah, 2
-  int 0x13
-
+  mov bx, [load_sector_ptr]
+  call bx
   ret
 ; }}}
