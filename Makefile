@@ -1,6 +1,6 @@
 DISKNAME = build/disk.img
 LOADERNAME = build/loader.o
-UTILNAME = build/util_sector.o
+KERNELNAME = build/kernel.o
 MAGICNUMBERFILE = misc/magic_number
 
 
@@ -42,9 +42,8 @@ build/%.o: %.asm
 
 #making a bootable disk with loader
 
-$(DISKNAME): $(LOADERNAME) $(UTILNAME)
+$(DISKNAME): $(LOADERNAME) $(KERNELNAME)
 	[ `du -b $(LOADERNAME) | cut -f1` -le 510 ] #loader too large
-	[ `du -b $(UTILNAME) | cut -f1` -le 512 ] #utils sector too large
 	#overwrite junk left from previous compiles with zeroes
 	dd if=/dev/zero of=$@ bs=1M count=1 >/dev/null 2>/dev/null
 	#write my sectors

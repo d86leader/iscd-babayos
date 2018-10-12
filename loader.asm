@@ -18,24 +18,69 @@ jmp 0x0:start
 
 ;; ----- DATA SECTION ----- ;;
 
-util_load_success:
-  db "loaded first sector..", 0
+startup_msg:
+  db "Booting up...", 0
 system_load_success:
-  db "loaded system memory", 0
+  db "Loaded system memory", 0
 a20_error_string:
-  db "error calling bios a20 enable",0
+  db "Error calling bios a20 enable",0
 
-%define gdt_descriptor 0x500
+gdt_descriptor:
+  dw plain_gdt.size
+  dd plain_gdt
 
-%define functions gdt_descriptor + 6
-%define load_sector_ptr functions + 8
-%define putstr_ptr      functions + 4
-%define exit_ptr        functions + 0
 
 %define system_start 0x7e00
 %ifndef system_sectors
   %define system_sectors 1
 %endif
+
+;; ----- GDT Section ----- ;;
+
+; struc gdt_entry {{{
+struc gdt_entry
+  .limit16: resw 1
+  .base16:  resw 1
+  .base24:  resb 1
+  .access:  resb 1
+  .limit20_flags: resb 1
+  .base32:  resb 1
+  .size:
+endstruc
+; }}}
+
+; plain_gdt {{{
+plain_gdt:
+.size equ .end - $ - 1
+;; zero entry
+istruc gdt_entry
+  at gdt_entry.limit16, dw 0
+  at gdt_entry.base16,  dw 0
+  at gdt_entry.base24,  db 0
+  at gdt_entry.access,  db 0
+  at gdt_entry.limit20_flags, db 0
+  at gdt_entry.base32,  db 0
+iend
+;; code sector, 0x8
+istruc gdt_entry
+  at gdt_entry.limit16, dw 0xffff
+  at gdt_entry.base16,  dw 0
+  at gdt_entry.base24,  db 0
+  at gdt_entry.access,  db 10011010b
+  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
+  at gdt_entry.base32,  db 0
+iend
+;; data sector, 0x10
+istruc gdt_entry
+  at gdt_entry.limit16, dw 0xffff
+  at gdt_entry.base16,  dw 0
+  at gdt_entry.base24,  db 0
+  at gdt_entry.access,  db 10010010b
+  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
+  at gdt_entry.base32,  db 0
+iend
+.end:
+; }}}
 
 ;; ----- START ----- ;;
 
@@ -54,29 +99,9 @@ spaces:
  cmp di, 80*25*2
  jb spaces
 
-;; ----- Read sector with functions ----- ;;
-
-;; this syscall uses es for loading destination
-xor ax, ax
-mov es, ax
-mov bx, gdt_descriptor ;; load to gdt_descriptor address
-xor cx, cx
-mov cl, 2 ;; cylinder 0, sector 2
-mov al, 1 ;; 1 sector
-xor dh, dh ;; head 0
-mov dl, 0x80 ;; first disk drive
-
-mov ah, 2
-int 0x13 ;; execute sector loading
-
-;; restore es pointing to video memory
-mov ax, 0xb800
-mov es, ax
-
 ;; print success message
-mov si, util_load_success
-mov ax, [putstr_ptr]
-call ax
+mov si, startup_msg
+call putstr
 
 ;; ----- Read system sectors ----- ;;
 
@@ -85,7 +110,7 @@ xor ax, ax
 mov es, ax
 mov bx, system_start ;; load to system start address
 xor cx, cx
-mov cl, 3 ;; cylinder 0, sector 2
+mov cl, 2 ;; cylinder 0, sector 1
 mov al, system_sectors ;; the correct amount of sectors
 xor dh, dh ;; head 0
 mov dl, 0x80 ;; first disk drive
@@ -110,13 +135,15 @@ jc a20_error
 
 ;; ----- Enter protected mode ----- ;;
 
+;; save current screen offset
+mov cx, [current_line]
+;; perform entering
 cli
 lgdt [gdt_descriptor]
 mov eax, cr0
 or al, 1
 mov cr0, eax
 
-jmp 0x8:loop_mark
 jmp 0x8:system_start
 
 ;; protected mode comes after this
@@ -130,24 +157,45 @@ mov si, a20_error_string
 call putstr
 jmp loop_mark
 
+
+;; ----- Functions ----- ;;
+
+; exit {{{
+exit:
+  xor al, al
+  out 0xf4, al
+; }}}
+
 ; putstr {{{
 ;; ARGS
 ;;    ds:si - string to put, 0-terminated
 ;;  NO regs preserved
 current_line: dw 0
 putstr:
-  mov ax, [putstr_ptr]
-  call ax
-  ret
-; }}}
+ ;; assuming es points to video memory
+ ;; load current line address to di
+ mov di, [current_line]
 
-; load_sector {{{
-;; ARGS:
-;;    es:di - destination
-;;    cx - cylinder:sector (ch:cl)
-;;    al - amount of sectors to load
-load_sector:
-  mov bx, [load_sector_ptr]
-  call bx
-  ret
+ .putchar:
+  lodsb
+  test al, al
+  jz .inc_line
+  stosb
+  mov al, 0x07
+  stosb
+  jmp .putchar
+
+ .inc_line:
+ ;; increment current line, loop to start if too big
+ mov ax, [current_line]
+ add ax, 80*2
+ mov [current_line], ax
+ cmp ax, 25*80*2
+ jb .exit
+ ;; was too big, put zero there
+ xor ax, ax
+ mov [current_line], ax
+
+ .exit:
+ ret
 ; }}}
