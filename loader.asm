@@ -8,6 +8,8 @@ mov ds, ax
 mov fs, ax
 mov gs, ax
 mov ss, ax
+;; es points to video memory
+mov ax, 0xb800
 mov es, ax
 ;; sp will point to end of chunk of convetional memory
 mov sp, 0x00007BF0
