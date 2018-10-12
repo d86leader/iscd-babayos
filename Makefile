@@ -1,5 +1,6 @@
 DISKNAME = build/disk.img
 LOADERNAME = build/loader.o
+LOADERCODE = loader.asm
 KERNELNAME = build/kernel.o
 MAGICNUMBERFILE = misc/magic_number
 
@@ -35,6 +36,10 @@ gdb:
 
 ASM = nasm
 ASMFLAGS = -f bin
+
+$(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
+	$(eval SECS := $(shell sh misc/tell_sectors.sh $(KERNELNAME)))
+	$(ASM) $(ASMFLAGS) $< -dsystem_sectors=$(SECS) -o $@
 
 build/%.o: %.asm
 	$(ASM) $(ASMFLAGS) $^ -o $@
