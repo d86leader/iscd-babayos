@@ -46,8 +46,8 @@ $(DISKNAME): $(LOADERNAME) $(UTILNAME)
 	[ `du -b $(LOADERNAME) | cut -f1` -le 254 ] #loader too large
 	[ `du -b $(UTILNAME) | cut -f1` -le 256 ] #utils sector too large
 	#overwrite junk left from previous compiles with zeroes
-	dd if=/dev/zero of=$@ bs=1M count=1
+	dd if=/dev/zero of=$@ bs=1M count=1 >/dev/null 2>/dev/null
 	#write my sectors
-	bash -x write_sectors.sh $@ $^
+	bash misc/write_sectors.sh $@ $^
 	#copy magic number to the end
-	dd if=$(MAGICNUMBERFILE) of=$@ bs=1 oflag=seek_bytes seek=510 conv=notrunc
+	dd if=$(MAGICNUMBERFILE) of=$@ bs=1 oflag=seek_bytes seek=510 conv=notrunc >/dev/null 2>/dev/null
