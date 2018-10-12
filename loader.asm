@@ -32,6 +32,11 @@ a20_error_string:
 %define putstr_ptr      functions + 4
 %define exit_ptr        functions + 0
 
+%define system_start 0x7e00
+%ifndef system_sectors
+  %define system_sectors 1
+%endif
+
 ;; ----- START ----- ;;
 
 start:
@@ -75,7 +80,22 @@ call ax
 
 ;; ----- Read system sectors ----- ;;
 
-jmp loop_mark
+;; this syscall uses es for loading destination
+xor ax, ax
+mov es, ax
+mov bx, system_start ;; load to system start address
+xor cx, cx
+mov cl, 3 ;; cylinder 0, sector 2
+mov al, system_sectors ;; the correct amount of sectors
+xor dh, dh ;; head 0
+mov dl, 0x80 ;; first disk drive
+
+mov ah, 2
+int 0x13 ;; execute sector loading
+
+;; restore es pointing to video memory
+mov ax, 0xb800
+mov es, ax
 
 ;; ----- Put success message ----- ;;
 
@@ -96,7 +116,8 @@ mov eax, cr0
 or al, 1
 mov cr0, eax
 
-jmp 0x8:0x7e00
+jmp 0x8:loop_mark
+jmp 0x8:system_start
 
 ;; protected mode comes after this
 
