@@ -43,11 +43,11 @@ build/%.o: %.asm
 #making a bootable disk with loader
 
 $(DISKNAME): $(LOADERNAME) $(UTILNAME)
-	[[ `du -b $(LOADERNAME)` < 255 ]] #loader too large
-	[[ `du -b $(UTILNAME)` < 255 ]] #utils sector too large
+	[ `du -b $(LOADERNAME) | cut -f1` -le 254 ] #loader too large
+	[ `du -b $(UTILNAME) | cut -f1` -le 256 ] #utils sector too large
 	#overwrite junk left from previous compiles with zeroes
 	dd if=/dev/zero of=$@ bs=1M count=1
 	#write my sectors
-	bash write_sectors.sh $^
+	bash -x write_sectors.sh $@ $^
 	#copy magic number to the end
 	dd if=$(MAGICNUMBERFILE) of=$@ bs=1 oflag=seek_bytes seek=510 conv=notrunc
