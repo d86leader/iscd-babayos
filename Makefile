@@ -43,8 +43,8 @@ build/%.o: %.asm
 #making a bootable disk with loader
 
 $(DISKNAME): $(LOADERNAME) $(UTILNAME)
-	[ `du -b $(LOADERNAME) | cut -f1` -le 254 ] #loader too large
-	[ `du -b $(UTILNAME) | cut -f1` -le 256 ] #utils sector too large
+	[ `du -b $(LOADERNAME) | cut -f1` -le 510 ] #loader too large
+	[ `du -b $(UTILNAME) | cut -f1` -le 512 ] #utils sector too large
 	#overwrite junk left from previous compiles with zeroes
 	dd if=/dev/zero of=$@ bs=1M count=1 >/dev/null 2>/dev/null
 	#write my sectors
