@@ -29,7 +29,7 @@ current_line: dw 0
 putstr:
  mov edi, 0xb8000
  ;; load current line offset in symbol pairs to cx
- xor cx, cx
+ xor ecx, ecx
  mov cx, [current_line]
  add edi, ecx
 
