@@ -1,7 +1,7 @@
-set architecture i8086
+set architecture i386:intel
 set disassembly-flavor intel
 
 target remote localhost:1234
 layout regs
 focus cmd
-break *0x7c00
+break *0x7e00
