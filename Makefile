@@ -38,7 +38,7 @@ ASM = nasm
 ASMFLAGS = -f bin
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
-	$(eval SECS := $(shell sh misc/tell_sectors.sh $(KERNELNAME)))
+	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))
 	$(ASM) $(ASMFLAGS) $< -dsystem_sectors=$(SECS) -o $@
 
 build/%.o: %.asm
