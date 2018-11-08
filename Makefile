@@ -39,7 +39,8 @@ gdb:
 #compiling asm files
 
 ASM = nasm
-ASMFLAGS = -f elf
+ASMFLAGS = -f elf64
+LDFLAGS = --oformat=binary -T linker.ld
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
 	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))
@@ -49,7 +50,7 @@ build/%.o: %.asm
 	$(ASM) $(ASMFLAGS) $^ -o $@
 
 $(KERNELNAME): $(KERNELBINARIES)
-	ld -m elf_i386 --oformat=binary -T linker.ld -o $@ $^
+	ld $(LDFLAGS) -o $@ $^
 
 
 #making a bootable disk with loader
