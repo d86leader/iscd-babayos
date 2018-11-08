@@ -1,12 +1,16 @@
 DISKNAME = build/disk.img
 LOADERNAME = build/loader.o
 LOADERCODE = loader.asm
-KERNELNAME = build/kernel.o
+KERNELNAME = build/kernel
+KERNELBINARIES = build/kernel.o build/putstr.o
 MAGICNUMBERFILE = misc/magic_number
 
 
 all: disk run
 disk: $(DISKNAME)
+
+clean:
+	rm build/*
 
 
 # running qemu (optionally server)
@@ -35,14 +39,17 @@ gdb:
 #compiling asm files
 
 ASM = nasm
-ASMFLAGS = -f bin
+ASMFLAGS = -f elf
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
 	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))
-	$(ASM) $(ASMFLAGS) $< -dsystem_sectors=$(SECS) -o $@
+	$(ASM) -f bin $< -dsystem_sectors=$(SECS) -o $@
 
 build/%.o: %.asm
 	$(ASM) $(ASMFLAGS) $^ -o $@
+
+$(KERNELNAME): $(KERNELBINARIES)
+	ld -m elf_i386 --oformat=binary -T linker.ld -o $@ $^
 
 
 #making a bootable disk with loader
