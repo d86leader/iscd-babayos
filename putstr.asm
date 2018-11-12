@@ -18,11 +18,13 @@ section .text
 ;; edi - current screen place
 putstr:
  mov edi, 0xb8000
- ;; load current line offset in symbol pairs to bx
+ ;; load current cursor position in bx
  xor ebx, ebx
- mov bx, [current_line]
+ mov bx, [current_position]
  add edi, ebx
- ;; load default color in ebx
+ ;; now load current line offset in bx
+ mov bx, [current_line]
+ ;; load default color in edx
  mov dl, 0x07
  xor eax, eax
 
@@ -51,6 +53,7 @@ putstr:
 inc_line:
  add bx, 80*2
  mov [current_line], bx
+ mov [current_position], bx
  cmp bx, 25*80*2
  jb .end
  call scroll_down
@@ -58,6 +61,7 @@ inc_line:
 ; }}}
 
 
+; control char handlers {{{
 no_handle: ;; nothing for now
  jmp putstr.putchar
 
@@ -112,18 +116,22 @@ scroll_down:
  mov cx, [current_line]
  sub ecx, 80*2
  mov [current_line], cx
+ mov cx, [current_position]
+ sub ecx, 80*2
+ mov [current_position], cx
 
  pop ecx
  pop eax
  pop esi
  pop edi
  ret
-
 ; }}}
 
+
 section .data
-current_line:
+current_position:
 putstr_current_line: dw 0
+current_line: dw 0
 
 special_char_handlers:
 dd null_handle       ;; 0
