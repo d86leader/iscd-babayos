@@ -30,3 +30,4 @@ hang_machine:
 
 extern putstr
 extern putstr_current_line
+extern scroll_down

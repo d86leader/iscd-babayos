@@ -2,6 +2,7 @@
 
 global putstr
 global putstr_current_line
+global scroll_down
 
 section .text
 ; putstr {{{
@@ -38,5 +39,30 @@ putstr:
  ret
 ; }}}
 
+; scroll_down {{{
+;; move all text up and free one line at the bottom
+scroll_down:
+ ;; move 24 lines of 80 words up
+ mov edi, 0xb8000
+ mov esi, edi
+ add esi, 80*2 ;; one line
+ mov ecx, 80*24 ;; screen without one line
+ rep movsw
+
+ ;; fill bottom line with spaces
+ mov ax, 0x0720
+ mov ecx, 80
+ rep stosw
+
+ ;; decrement current line
+ mov cx, [current_line]
+ sub ecx, 80*2
+ mov [current_line], cx
+
+ ret
+
+; }}}
+
 section .data
+current_line:
 putstr_current_line: dw 0
