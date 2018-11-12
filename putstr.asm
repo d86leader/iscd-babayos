@@ -42,7 +42,9 @@ putstr:
   jmp ecx
 
  .string_end:
-  call inc_line
+  ;; save current position
+  sub edi, 0xb8000
+  mov [current_position], di
 
  .exit:
  ret
@@ -51,7 +53,17 @@ putstr:
 
 ; inc_line {{{
 inc_line:
- add bx, 80*2
+ push edi
+ sub edi, 0xb8000
+
+ ;; find first position that is after current position
+ .find_next_line:
+  add bx, 80*2
+  cmp bx, di
+  jbe .find_next_line
+ 
+ pop edi
+ 
  mov [current_line], bx
  mov [current_position], bx
  cmp bx, 25*80*2
