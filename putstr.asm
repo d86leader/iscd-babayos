@@ -8,36 +8,80 @@ section .text
 ; putstr {{{
 ;; ARGS
 ;;    esi - string to put, 0-terminated
-;;  modifies edi, esi, eax, ecx
+;;  modifies edi, esi, eax, ebx, ecx, edx
+
+;; register meaning:
+;; eax - current character
+;; ebx - current line offset from screen start
+;; ecx - general purpose
+;; edx - current color
+;; edi - current screen place
 putstr:
  mov edi, 0xb8000
- ;; load current line offset in symbol pairs to cx
- xor ecx, ecx
- mov cx, [current_line]
- add edi, ecx
+ ;; load current line offset in symbol pairs to bx
+ xor ebx, ebx
+ mov bx, [current_line]
+ add edi, ebx
+ ;; load default color in ebx
+ mov dl, 0x07
+ xor eax, eax
 
  .putchar:
   lodsb
-  test al, al
-  jz .inc_line
+  cmp al, 32
+  jb .handle_special
   stosb
-  mov al, 0x07
+  mov al, dl
   stosb
   jmp .putchar
 
- .inc_line:
-  ;; increment current line, loop to start if too big
-  add cx, 80*2
-  mov [current_line], cx
-  cmp cx, 25*80*2
-  jb .exit
-  ;; was too big, put zero there
-  xor cx, cx
-  mov [current_line], cx
+ .handle_special:
+  mov ecx, [special_char_handlers + eax*4]
+  jmp ecx
+
+ .string_end:
+  call inc_line
 
  .exit:
  ret
 ; }}}
+
+
+; inc_line {{{
+inc_line:
+ add bx, 80*2
+ mov [current_line], bx
+ cmp bx, 25*80*2
+ jb .end
+ call scroll_down
+ .end: ret
+; }}}
+
+
+no_handle: ;; nothing for now
+ jmp putstr.putchar
+
+null_handle: ;; stop writing
+ jmp putstr.string_end
+
+backspace_handle: ;; move pointer one to the left
+ dec edi
+ dec edi
+ jmp putstr.putchar
+
+line_feed_handle: ;; move pointer to next line
+ call inc_line
+ jmp cr_handle
+
+cr_handle: ;; move pointer to start of line
+ mov edi, 0xb8000
+ add edi, ebx
+ jmp putstr.putchar
+ 
+shift_out_handle:
+shift_in_handle:
+ jmp no_handle
+
 
 ; scroll_down {{{
 ;; move all text up and free one line at the bottom
@@ -66,3 +110,15 @@ scroll_down:
 section .data
 current_line:
 putstr_current_line: dw 0
+
+special_char_handlers:
+dd null_handle       ;; 0
+times 7 dd no_handle ;; 1-7
+dd backspace_handle  ;; 8
+dd null_handle       ;; 9 - tab
+dd line_feed_handle  ;; 10 - nl
+times 2 dd no_handle ;; 11-12 - vertical tab and form feed
+dd cr_handle         ;; 13 - carriage return
+dd shift_out_handle  ;; 14 - shift-out - color off
+dd shift_in_handle   ;; 15 - shift-in - color on
+times 16 dd no_handle
