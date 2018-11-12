@@ -78,9 +78,15 @@ cr_handle: ;; move pointer to start of line
  add edi, ebx
  jmp putstr.putchar
  
-shift_out_handle:
-shift_in_handle:
- jmp no_handle
+shift_out_handle: ;; set default color
+ mov dl, 0x07
+ jmp putstr.putchar
+
+shift_in_handle: ;; set next character as color
+ lodsb
+ mov dl, al
+ jmp putstr.putchar
+; }}}
 
 
 ; scroll_down {{{
