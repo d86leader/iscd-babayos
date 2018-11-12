@@ -13,7 +13,7 @@ putstr:
  mov edi, 0xb8000
  ;; load current line offset in symbol pairs to cx
  xor ecx, ecx
- mov cx, [putstr_current_line]
+ mov cx, [current_line]
  add edi, ecx
 
  .putchar:
@@ -28,12 +28,12 @@ putstr:
  .inc_line:
   ;; increment current line, loop to start if too big
   add cx, 80*2
-  mov [putstr_current_line], cx
+  mov [current_line], cx
   cmp cx, 25*80*2
   jb .exit
   ;; was too big, put zero there
   xor cx, cx
-  mov [putstr_current_line], cx
+  mov [current_line], cx
 
  .exit:
  ret
