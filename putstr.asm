@@ -86,6 +86,10 @@ shift_in_handle:
 ; scroll_down {{{
 ;; move all text up and free one line at the bottom
 scroll_down:
+ push edi
+ push esi
+ push eax
+ push ecx
  ;; move 24 lines of 80 words up
  mov edi, 0xb8000
  mov esi, edi
@@ -103,6 +107,10 @@ scroll_down:
  sub ecx, 80*2
  mov [current_line], cx
 
+ pop ecx
+ pop eax
+ pop esi
+ pop edi
  ret
 
 ; }}}
