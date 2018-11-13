@@ -29,12 +29,23 @@ putstr:
  xor eax, eax
 
  .putchar:
+  ;; check if still writing to screen
+  cmp edi, 0xb8000 + 80*25*2
+  jge .screen_filled
+
+  ;; load char, handle if special
   lodsb
   cmp al, 32
   jb .handle_special
+  ;; write it and color otherwise
   stosb
   mov al, dl
   stosb
+  jmp .putchar
+
+ .screen_filled:
+  call scroll_down
+  sub edi, 80*2
   jmp .putchar
 
  .handle_special:
@@ -93,7 +104,7 @@ cr_handle: ;; move pointer to start of line
  mov edi, 0xb8000
  add edi, ebx
  jmp putstr.putchar
- 
+
 shift_out_handle: ;; set default color
  mov dl, 0x07
  jmp putstr.putchar
@@ -144,6 +155,8 @@ section .data
 current_position:
 putstr_current_line: dw 0
 current_line: dw 0
+
+dd 0,0,0,0 ;; just in case
 
 special_char_handlers:
 dd null_handle       ;; 0
