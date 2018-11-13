@@ -19,16 +19,21 @@ protected_entered_msg:
 special_char_test:
   db "I'm usig", 8, "ng special characters!", 10, "on new line too!", 10
   db 15, 0x26, "in color now,", 14, " without color now", 10, 0
+scroll_down_test:
+  times 18 db 10
+  db 0
 
 
 section .text
 ;; ----- Real start ----- ;;
 real_start:
-mov esi, protected_entered_msg
+mov esi, scroll_down_test
 call putstr
 mov esi, protected_entered_msg
 call putstr
 mov esi, special_char_test
+call putstr
+mov esi, protected_entered_msg
 call putstr
 
 
