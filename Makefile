@@ -60,6 +60,7 @@ $(DISKNAME): $(LOADERNAME) $(KERNELNAME)
 	#overwrite junk left from previous compiles with zeroes
 	dd if=/dev/zero of=$@ bs=1M count=1 >/dev/null 2>/dev/null
 	#write my sectors
-	bash misc/write_sectors.sh $@ $^
+	dd if=$(LOADERNAME) of=$@ bs=1 count=512 conv=notrunc >/dev/null 2>/dev/null
+	dd if=$(KERNELNAME) of=$@ bs=1 conv=notrunc oflag=seek_bytes seek=512 >/dev/null 2>/dev/null
 	#copy magic number to the end
 	dd if=$(MAGICNUMBERFILE) of=$@ bs=1 oflag=seek_bytes seek=510 conv=notrunc >/dev/null 2>/dev/null
