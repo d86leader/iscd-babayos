@@ -72,14 +72,11 @@ inc_line:
   add bx, 80*2
   cmp bx, di
   jbe .find_next_line
- 
+
  pop edi
- 
+
  mov [current_line], bx
  mov [current_position], bx
- cmp bx, 25*80*2
- jb .end
- call scroll_down
  .end: ret
 ; }}}
 
