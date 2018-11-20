@@ -39,8 +39,8 @@ gdb:
 #compiling asm files
 
 ASM = nasm
-ASMFLAGS = -f elf
-LDFLAGS = --oformat=binary -m elf_i386 -T linker.ld
+ASMFLAGS = -f elf64
+LDFLAGS = --oformat=binary -m elf_x86_64 -T linker.ld
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
 	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))

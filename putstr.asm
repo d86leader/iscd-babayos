@@ -1,5 +1,8 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
 
+[BITS 32]
+
+
 global putstr
 global putstr_current_line
 global scroll_down
