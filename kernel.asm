@@ -1,6 +1,8 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
 [BITS 32]
 
+%include "fail.asmh"
+
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
 mov ds, ax
@@ -36,6 +38,7 @@ call putstr
 mov esi, protected_entered_msg
 call putstr
 
+fail
 
 hang_machine:
  jmp hang_machine
@@ -43,3 +46,4 @@ hang_machine:
 extern putstr
 extern putstr_current_line
 extern scroll_down
+
