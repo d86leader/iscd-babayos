@@ -1,0 +1,32 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef FAIL_H
+%define FAIL_H
+
+extern putstr
+
+%define FAIL_H_quot '"'
+%define FAIL_H_to_string(x) FAIL_H_quot %+ x %+ FAIL_H_quot
+
+%macro fail_with 1
+  section .text
+
+  mov esi, %%fail_message
+  call putstr
+
+  %%hang_ptr:
+    jmp %%hang_ptr
+
+  %%fail_message:
+    db  15, 0x02
+    db  "In file ", __FILE__, " on line ", FAIL_H_to_string(__LINE__), 10
+    db  "With ", FAIL_H_to_string(__BITS__), " bits mode"
+;    db  " built as ", __OUTPUT_FORMAT__
+    db  " on ", __UTC_DATE__, " ", __UTC_TIME__, 10
+    db  15, 0x03, %1, 0
+%endmacro
+
+%macro fail 0
+  fail_with "Fatal error. Stopping."
+%endmacro
+
+%endif
