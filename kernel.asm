@@ -18,27 +18,35 @@ jmp real_start
 section .data
 protected_entered_msg:
   db "Succesfully entered protected mode", 10, 0
-special_char_test:
-  db "I'm usig", 8, "ng special characters!", 10, "on new line too!", 10
-  db 15, 0x26, "in color now,", 14, " without color now", 10, 0
-scroll_down_test:
-  times 18 db 10
-  db 0
+idt_loaded_nsg:
+  db "Successfully loaded idtd"
+int_success_msg:
+  db "Interrupt execute successfully"
+int_fail_msg:
+  db "Interrupt returned but did not work"
 
 
 section .text
 ;; ----- Real start ----- ;;
 real_start:
-mov esi, scroll_down_test
-call putstr
-mov esi, protected_entered_msg
-call putstr
-mov esi, special_char_test
-call putstr
 mov esi, protected_entered_msg
 call putstr
 
-fail
+lidt [idt_descriptor]
+int 48
+
+cmp eax, 228
+je good
+
+  mov esi, [int_fail_msg]
+  call putstr
+  jmp hang_machine
+
+good:
+  mov esi, [int_success_msg]
+  call putstr
+  jmp hang_machine
+
 
 hang_machine:
  jmp hang_machine
@@ -46,4 +54,4 @@ hang_machine:
 extern putstr
 extern putstr_current_line
 extern scroll_down
-
+extern idt_descriptor
