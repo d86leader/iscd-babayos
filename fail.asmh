@@ -4,7 +4,7 @@
 
 extern putstr
 
-%define FAIL_H_quot '"'
+%define FAIL_H_quot "
 %define FAIL_H_to_string(x) FAIL_H_quot %+ x %+ FAIL_H_quot
 
 %macro fail_with 1
