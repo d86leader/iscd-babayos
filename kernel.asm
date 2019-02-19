@@ -19,11 +19,11 @@ section .data
 protected_entered_msg:
   db "Succesfully entered protected mode", 10, 0
 idt_loaded_nsg:
-  db "Successfully loaded idtd"
+  db "Successfully loaded idtd", 0
 int_success_msg:
-  db "Interrupt execute successfully"
+  db "Interrupt execute successfully", 0
 int_fail_msg:
-  db "Interrupt returned but did not work"
+  db "Interrupt returned but did not work", 0
 
 
 section .text
@@ -32,7 +32,18 @@ real_start:
 mov esi, protected_entered_msg
 call putstr
 
+mov ecx, 64
+handler_set_loop:
+  mov esi, all_int_handler
+  mov edi, ecx
+  call set_int_handler
+  loop handler_set_loop
+
 lidt [idt_descriptor]
+
+mov esi, idt_loaded_nsg
+call putstr
+
 int 48
 
 cmp eax, 228
@@ -55,3 +66,5 @@ extern putstr
 extern putstr_current_line
 extern scroll_down
 extern idt_descriptor
+extern set_int_handler
+extern all_int_handler
