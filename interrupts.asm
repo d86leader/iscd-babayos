@@ -20,10 +20,10 @@ set_int_handler:
 
  mov eax, esi
  and eax, 0xffff
- mov [edi + idt_entry.offset16], eax
+ mov [edi + idt_entry.offset16], ax
 
  shr esi, 16
- mov [edi + idt_entry.offset32], esi
+ mov [edi + idt_entry.offset32], si
 
  ret
 ; }}}
