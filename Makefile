@@ -7,6 +7,7 @@ MAGICNUMBERFILE = misc/magic_number
 
 
 all: disk run
+server: disk run-server
 disk: $(DISKNAME)
 
 clean:
