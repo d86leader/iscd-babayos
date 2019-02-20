@@ -2,6 +2,8 @@
 [BITS 32]
 
 %include "fail.asmh"
+%include "putstr.asmh"
+%include "interrupts.asmh"
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
@@ -16,22 +18,28 @@ mov [putstr_current_line], ecx
 
 jmp real_start
 
-section .data
-protected_entered_msg:
-  db "Succesfully entered protected mode", 0
-idt_loaded_nsg:
-  db "Succesfully loaded idtd", 0
-int_success_msg:
-  db "Interrupt executed successfully", 0
-int_fail_msg:
-  db "Interrupt returned but did not work", 0
 
-
-section .text
 ;; ----- Real start ----- ;;
+
+
 real_start:
-mov esi, protected_entered_msg
-call putstr
+PUTS "Succesfully entered protected mode"
+
+;; -- Test if A20 line is enabled -- ;;
+
+mov edi, 0x112345
+mov esi, 0x012345
+mov [esi], esi
+mov [edi], edi
+cmpsd
+jne A20_set
+PUTS "A20 line was not set. Stopping"
+jmp hang_machine
+
+A20_set:
+
+
+;; -- Load interrupt routines to idt -- ;;
 
 mov ecx, 64
 handler_set_loop:
@@ -41,27 +49,17 @@ handler_set_loop:
   loop handler_set_loop
 
 lidt [idt_descriptor]
+PUTS "Succesfully loaded idtd"
 
-mov esi, idt_loaded_nsg
-call putstr
+;; Test if interrupts work
 
 int 48
 
 cmp eax, 228
-je good
-
-  mov esi, int_fail_msg
-  call putstr
-  jmp hang_machine
-
-good:
-  mov esi, int_success_msg
-  call putstr
-  jmp hang_machine
+jne hang_machine
+PUTS "Interrupt executed successfully"
+jmp hang_machine
 
 
 hang_machine:
  jmp hang_machine
-
-%include "putstr.asmh"
-%include "interrupts.asmh"

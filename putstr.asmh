@@ -6,4 +6,15 @@ extern putstr
 extern putstr_current_line
 extern scroll_down
 
+
+; macro puts {{{
+%macro PUTS 1
+ section .data
+ %%str: db %1, 0
+ section .text
+ mov esi, %%str
+ call putstr
+%endmacro
+; }}}
+
 %endif ;;PUTSTR_H
