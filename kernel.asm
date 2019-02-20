@@ -59,6 +59,14 @@ PUTS "Long mode is availible"
 
 ;; ----- Entering long mode ----- ;;
 
+;; set an empty idt so any exception will cause triple fault
+section .data
+.zero_idt:
+ dw 0
+ dd 0
+section .text
+lidt [.zero_idt]
+
 extern set_paging
 extern pml4
 call set_paging
