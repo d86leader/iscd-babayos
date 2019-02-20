@@ -25,6 +25,7 @@ jmp real_start
 real_start:
 PUTS "Succesfully entered protected mode"
 
+
 ;; -- Test if A20 line is enabled -- ;;
 
 mov edi, 0x112345
@@ -37,6 +38,24 @@ PUTS "A20 line was not set. Stopping"
 jmp hang_machine
 
 A20_set:
+
+
+;; ----- Test if long mode supported ----- ;;
+
+mov eax, 0x80000000
+cpuid
+cmp eax, 0x80000001
+jb hang_machine
+
+PUTS "Extended functions are availible"
+
+mov eax, 0x80000001
+cpuid
+test edx, 1 << 29
+jz hang_machine
+
+PUTS "Long mode is availible"
+
 
 ;; ----- Entering long mode ----- ;;
 
@@ -55,7 +74,7 @@ or eax, (1 << 8) ;; long mode enable
 wrmsr
 
 mov eax, cr0
-or eax, ((1 << 31) | 1) ;; protection and paging bits
+or eax, (1 << 31) ;; protection and paging bits
 mov cr0, eax
 
 PUTS "Entered long mode (32-bit)"
