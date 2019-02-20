@@ -11,108 +11,115 @@ section .text
 ; putstr {{{
 ;; ARGS
 ;;    esi - string to put, 0-terminated
-;;  modifies edi, esi, eax, ebx, ecx, edx
-
-;; register meaning:
-;; eax - current character
-;; ebx - current line offset from screen start
-;; ecx - general purpose
-;; edx - current color
-;; edi - current screen place
+;; modifies
+;;    eax - current symbol
+;;    ebx - current colour
+;;    ecx - symbols left in current line until end
+;;    edx - function to call / its return code
 putstr:
- mov edi, 0xb8000
- ;; load current cursor position in bx
+ mov edi, [putstr_current_line]
  xor ebx, ebx
- mov bx, [current_position]
- add edi, ebx
- ;; now load current line offset in bx
- mov bx, [current_line]
- ;; load default color in edx
- mov dl, 0x07
- xor eax, eax
+ mov bl, 0x07
+ mov ecx, 80
 
- .putchar:
-  ;; check if still writing to screen
-  cmp edi, 0xb8000 + 80*25*2
-  jge .screen_filled
+.putchar_loop:
+ lodsb
+ cmp al, 32
+ jb .handle_special
+ call putchar
+ jmp .putchar_loop
 
-  ;; load char, handle if special
-  lodsb
-  cmp al, 32
-  jb .handle_special
-  ;; write it and color otherwise
-  stosb
-  mov al, dl
-  stosb
-  jmp .putchar
+.handle_special:
+ mov edx, [special_char_handlers + eax*4]
+ call edx
+ ;; return code is in edx, nonzero means stop
+ test edx, edx
+ jz .putchar_loop
 
- .screen_filled:
-  call scroll_down
-  sub edi, 80*2
-  jmp .putchar
-
- .handle_special:
-  mov ecx, [special_char_handlers + eax*4]
-  jmp ecx
-
- .string_end:
-  ;; save current position
-  sub edi, 0xb8000
-  mov [current_position], di
-
- .exit:
  ret
 ; }}}
 
+; putchar {{{
+;; not so much a procedure, but a subroutine to many procedures here
+;; registers meaning - same as putstr
+;; puts a symbol and corrects current line as needed. Maybe redraws the screen
+putchar:
+ stosb
+ xchg al, bl
+ stosb
+ xchg al, bl
+ dec ecx
 
-; inc_line {{{
-inc_line:
- push edi
- sub edi, 0xb8000
+ test ecx, ecx
+ jnz .return
 
- ;; find first position that is after current position
- .find_next_line:
-  add bx, 80*2
-  cmp bx, di
-  jbe .find_next_line
+ ;; ecx is zero, which means line has ended. Start a new line
+ ;; alright, this is different from next_line as that is called when there are
+ ;; still symbols left to write, but this is only called when there are none
+ ;; Proof: after this function is finished working, ecx is not zero as the
+ ;; test above checks. This means that when this function finishes and as there
+ ;; are no other ways to print a char, there is still space to write a char
 
- pop edi
+ cmp edi, 0xb8000 + 80 * 25 * 2 ;; screen limit
+ jb .no_scroll
 
- mov [current_line], bx
- mov [current_position], bx
- .end: ret
+ call scroll_down
+ sub edi, 80*2
+
+.no_scroll:
+ mov ecx, 80
+ mov [putstr_current_line], edi
+
+.return:
+ ret
 ; }}}
 
 
 ; control char handlers {{{
 no_handle: ;; nothing for now
- jmp putstr.putchar
+ xor edx, edx
+ ret
 
 null_handle: ;; stop writing
- jmp putstr.string_end
+ xor edx, edx
+ inc edx
+ ret
 
 backspace_handle: ;; move pointer one to the left
  dec edi
  dec edi
- jmp putstr.putchar
+ xor edx, edx
+ ret
 
-line_feed_handle: ;; move pointer to next line
- call inc_line
- jmp cr_handle
+line_feed_handle: ;; move pointer to start of next line
+ mov al, ' '
+
+ .start_put_space
+  cmp ecx, 80
+  jge .end_put_space
+  call putchar
+  ;; putchar does not set ecx to zero ever
+  jmp .start_put_space
+ .end_put_space:
+
+ xor edx, edx
+ ret
 
 cr_handle: ;; move pointer to start of line
- mov edi, 0xb8000
- add edi, ebx
- jmp putstr.putchar
+ mov edi, [current_line]
+ xor edx, edx
+ ret
 
 shift_out_handle: ;; set default color
- mov dl, 0x07
- jmp putstr.putchar
+ mov bl, 0x07
+ xor edx, edx
+ ret
 
 shift_in_handle: ;; set next character as color
  lodsb
- mov dl, al
- jmp putstr.putchar
+ mov bl, al
+ xor edx, edx
+ ret
 ; }}}
 
 
@@ -135,14 +142,6 @@ scroll_down:
  mov ecx, 80
  rep stosw
 
- ;; decrement current line
- mov cx, [current_line]
- sub ecx, 80*2
- mov [current_line], cx
- mov cx, [current_position]
- sub ecx, 80*2
- mov [current_position], cx
-
  pop ecx
  pop eax
  pop esi
@@ -153,7 +152,7 @@ scroll_down:
 
 section .data
 current_position:
-putstr_current_line: dw 0
+putstr_current_line: dd 0
 current_line: dw 0
 
 dd 0,0,0,0 ;; just in case
