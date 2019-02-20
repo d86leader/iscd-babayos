@@ -132,6 +132,7 @@ null_handle: ;; stop writing
 backspace_handle: ;; move pointer one to the left
  dec edi
  dec edi
+ inc ecx
  xor edx, edx
  ret
 
