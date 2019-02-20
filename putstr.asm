@@ -36,6 +36,8 @@ putstr:
  test edx, edx
  jz .putchar_loop
 
+ call next_line
+
  ret
 ; }}}
 
@@ -52,21 +54,8 @@ putchar:
 
  test ecx, ecx
  jnz .return
-
- ;; ecx is zero, which means line has ended. Start a new line
- ;; alright, this is different from next_line as that is called when there are
- ;; still symbols left to write, but this is only called when there are none
- ;; Proof: after this function is finished working, ecx is not zero as the
- ;; test above checks. This means that when this function finishes and as there
- ;; are no other ways to print a char, there is still space to write a char
-
- cmp edi, 0xb8000 + 80 * 25 * 2 ;; screen limit
- jb .no_scroll
-
- call scroll_down
- sub edi, 80*2
-
-.no_scroll:
+ ;; ecx is zero, which means line has ended. Start a new line.
+ call scroll_if_end
  mov ecx, 80
  mov [putstr_current_line], edi
 
@@ -75,52 +64,32 @@ putchar:
 ; }}}
 
 
-; control char handlers {{{
-no_handle: ;; nothing for now
- xor edx, edx
- ret
+; next_line {{{
+next_line:
+ shl ecx, 1
+ add edi, ecx
+ call scroll_if_end
+ mov ecx, 80
+ mov [putstr_current_line], edi
 
-null_handle: ;; stop writing
- xor edx, edx
- inc edx
- ret
-
-backspace_handle: ;; move pointer one to the left
- dec edi
- dec edi
- xor edx, edx
- ret
-
-line_feed_handle: ;; move pointer to start of next line
- mov al, ' '
-
- .start_put_space
-  cmp ecx, 80
-  jge .end_put_space
-  call putchar
-  ;; putchar does not set ecx to zero ever
-  jmp .start_put_space
- .end_put_space:
-
- xor edx, edx
- ret
-
-cr_handle: ;; move pointer to start of line
- mov edi, [current_line]
- xor edx, edx
- ret
-
-shift_out_handle: ;; set default color
- mov bl, 0x07
- xor edx, edx
- ret
-
-shift_in_handle: ;; set next character as color
- lodsb
- mov bl, al
- xor edx, edx
  ret
 ; }}}
+
+
+; scroll_if_end {{{
+;; scroll down if no more space left on screen
+;; should only call this with ecx zero
+scroll_if_end:
+ cmp edi, 0xb8000 + 80 * 25 * 2 ;; screen limit
+ jb .no_scroll
+
+ call scroll_down
+ sub edi, 80*2
+
+.no_scroll:
+ ret
+; }}}
+
 
 
 ; scroll_down {{{
@@ -150,10 +119,48 @@ scroll_down:
 ; }}}
 
 
+; control char handlers {{{
+no_handle: ;; nothing for now
+ xor edx, edx
+ ret
+
+null_handle: ;; stop writing
+ xor edx, edx
+ inc edx
+ ret
+
+backspace_handle: ;; move pointer one to the left
+ dec edi
+ dec edi
+ xor edx, edx
+ ret
+
+line_feed_handle: ;; move pointer to start of next line
+ call next_line
+
+ xor edx, edx
+ ret
+
+cr_handle: ;; move pointer to start of line
+ mov edi, [putstr_current_line]
+ xor edx, edx
+ ret
+
+shift_out_handle: ;; set default color
+ mov bl, 0x07
+ xor edx, edx
+ ret
+
+shift_in_handle: ;; set next character as color
+ lodsb
+ mov bl, al
+ xor edx, edx
+ ret
+; }}}
+
+
 section .data
-current_position:
 putstr_current_line: dd 0
-current_line: dw 0
 
 dd 0,0,0,0 ;; just in case
 
