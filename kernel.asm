@@ -20,9 +20,9 @@ section .data
 protected_entered_msg:
   db "Succesfully entered protected mode", 0
 idt_loaded_nsg:
-  db "Successfully loaded idtd", 0
+  db "Succesfully loaded idtd", 0
 int_success_msg:
-  db "Interrupt execute successfully", 0
+  db "Interrupt executed successfully", 0
 int_fail_msg:
   db "Interrupt returned but did not work", 0
 
