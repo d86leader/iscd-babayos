@@ -17,7 +17,7 @@ clean:
 # running qemu (optionally server)
 
 QEMU = qemu-system-i386
-QEMUFLAGS = -monitor stdio -m 32 -device isa-debug-exit,iobase=0xf4,iosize=0x04
+QEMUFLAGS = -monitor stdio -m 32M -device isa-debug-exit,iobase=0xf4,iosize=0x04
 QEMUSERVER = -s -S
 QEMUDISK = -drive file=$(DISKNAME),format=raw
 
