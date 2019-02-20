@@ -1,0 +1,9 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef PUTSTR_H
+%define PUTSTR_H
+
+extern putstr
+extern putstr_current_line
+extern scroll_down
+
+%endif ;;PUTSTR_H

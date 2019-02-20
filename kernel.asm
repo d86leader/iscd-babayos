@@ -63,9 +63,5 @@ good:
 hang_machine:
  jmp hang_machine
 
-extern putstr
-extern putstr_current_line
-extern scroll_down
-extern idt_descriptor
-extern set_int_handler
-extern all_int_handler
+%include "putstr.asmh"
+%include "interrupts.asmh"
