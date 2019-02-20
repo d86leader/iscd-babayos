@@ -1,0 +1,15 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+
+;; things referring to pages and also gdt
+
+; struc gdt_entry {{{
+struc gdt_entry
+  .limit16: resw 1
+  .base16:  resw 1
+  .base24:  resb 1
+  .access:  resb 1
+  .limit20_flags: resb 1
+  .base32:  resb 1
+  .size:
+endstruc
+; }}}

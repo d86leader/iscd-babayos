@@ -37,17 +37,7 @@ gdt_descriptor:
 
 ;; ----- GDT Section ----- ;;
 
-; struc gdt_entry {{{
-struc gdt_entry
-  .limit16: resw 1
-  .base16:  resw 1
-  .base24:  resb 1
-  .access:  resb 1
-  .limit20_flags: resb 1
-  .base32:  resb 1
-  .size:
-endstruc
-; }}}
+%include "gdt.asmh"
 
 ; plain_gdt {{{
 plain_gdt:
