@@ -9,7 +9,8 @@ mov gs, ax
 mov ss, ax
 mov es, ax
 ;; restore current screen offset
-mov [putstr_current_line], cx
+add ecx, 0xb8000
+mov [putstr_current_line], ecx
 
 jmp real_start
 
