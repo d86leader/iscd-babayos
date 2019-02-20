@@ -50,12 +50,12 @@ int 48
 cmp eax, 228
 je good
 
-  mov esi, [int_fail_msg]
+  mov esi, int_fail_msg
   call putstr
   jmp hang_machine
 
 good:
-  mov esi, [int_success_msg]
+  mov esi, int_success_msg
   call putstr
   jmp hang_machine
 
