@@ -38,6 +38,29 @@ jmp hang_machine
 
 A20_set:
 
+;; ----- Entering long mode ----- ;;
+
+extern set_paging
+extern pml4
+call set_paging
+
+mov eax, 10100000b ;; PAE and PGE bits
+mov cr4, eax
+mov eax, pml4
+mov cr3, eax
+
+mov ecx, 0xC0000080
+rdmsr
+or eax, (1 << 8) ;; long mode enable
+wrmsr
+
+mov eax, cr0
+or eax, ((1 << 31) | 1) ;; protection and paging bits
+mov cr0, eax
+
+PUTS "Entered long mode (32-bit)"
+
+jmp hang_machine
 
 ;; -- Load interrupt routines to idt -- ;;
 

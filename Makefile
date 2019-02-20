@@ -2,7 +2,7 @@ DISKNAME = build/disk.img
 LOADERNAME = build/loader.o
 LOADERCODE = loader.asm
 KERNELNAME = build/kernel
-KERNELBINARIES = build/kernel.o build/putstr.o build/interrupts.o
+KERNELBINARIES = build/kernel.o build/putstr.o build/interrupts.o build/pages.o
 MAGICNUMBERFILE = misc/magic_number
 
 
