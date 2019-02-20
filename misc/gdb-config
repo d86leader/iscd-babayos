@@ -1,4 +1,4 @@
-set architecture i386:intel
+set architecture i386:x86-64:intel
 set disassembly-flavor intel
 
 target remote localhost:1234
