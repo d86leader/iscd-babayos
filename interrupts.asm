@@ -86,6 +86,8 @@ iend
 ;; align idt on 8 byte boundary
 align 8,db 0
 
+section .idt
+
 plain_idt:
 %rep 64
   def_int_gate 00b
