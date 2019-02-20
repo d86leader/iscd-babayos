@@ -11,13 +11,14 @@ mov gs, ax
 mov ss, ax
 mov es, ax
 ;; restore current screen offset
-mov [putstr_current_line], cx
+add ecx, 0xb8000
+mov [putstr_current_line], ecx
 
 jmp real_start
 
 section .data
 protected_entered_msg:
-  db "Succesfully entered protected mode", 10, 0
+  db "Succesfully entered protected mode", 0
 idt_loaded_nsg:
   db "Successfully loaded idtd", 0
 int_success_msg:
