@@ -21,6 +21,7 @@ putstr:
  xor ebx, ebx
  mov bl, 0x07
  mov ecx, 80
+ xor eax, eax
 
 .putchar_loop:
  lodsb
