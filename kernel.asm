@@ -4,6 +4,7 @@
 %include "fail.asmh"
 %include "putstr.asmh"
 %include "interrupts.asmh"
+%include "pages.asmh"
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
@@ -35,7 +36,7 @@ mov [edi], edi
 cmpsd
 jne A20_set
 PUTS "A20 line was not set. Stopping"
-jmp hang_machine
+jmp hang_machine_32
 
 A20_set:
 
@@ -45,14 +46,14 @@ A20_set:
 mov eax, 0x80000000
 cpuid
 cmp eax, 0x80000001
-jb hang_machine
+jb hang_machine_32
 
 PUTS "Extended functions are availible"
 
 mov eax, 0x80000001
 cpuid
 test edx, 1 << 29
-jz hang_machine
+jz hang_machine_32
 
 PUTS "Long mode is availible"
 
@@ -67,8 +68,6 @@ section .data
 section .text
 lidt [.zero_idt]
 
-extern set_paging
-extern pml4
 call set_paging
 
 mov eax, 10100000b ;; PAE and PGE bits
@@ -86,6 +85,23 @@ or eax, (1 << 31) ;; protection and paging bits
 mov cr0, eax
 
 PUTS "Entered long mode (32-bit)"
+
+;; set long mode gdt
+call set_gdt
+lgdt [gdt_descriptor]
+jmp 0x8:long_mode_start
+
+hang_machine_32:
+ jmp hang_machine_32
+
+[BITS 64]
+long_mode_start:
+mov ax, 0x10
+mov ds, ax
+mov fs, ax
+mov gs, ax
+mov ss, ax
+mov es, ax
 
 jmp hang_machine
 

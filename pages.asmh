@@ -1,0 +1,6 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+
+extern set_paging
+extern pml4
+extern set_gdt
+extern gdt_descriptor

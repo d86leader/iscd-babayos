@@ -4,16 +4,15 @@
 
 global set_paging
 global pml4
-
+global set_gdt
+global gdt_descriptor
 
 ;; ----- data sections ----- ;;
 
 ;; these sections are used to store paging tables. They are aligned by 4kb by
 ;; linker. The three tables: pml4, pdpt and pd - have only one entry present,
 ;; and they point at the next table. The last one, pt, maps all 4kb pages as
-;; present. I use 32Mb of memory, and it gives me only 2Mb, but that should be
-;; ok
-
+;; present. I use 32Mb of memory and map all of them
 section .pml4
 pml4: resq 1
 
@@ -81,6 +80,45 @@ mov eax, 11b ;; set flags, and only increment page offset
  jb .set_entry_loop
 
 
-;; ---- Paging done ----- ;;
+;; ----- Paging done ----- ;;
 
+ret
+
+
+;; ----- Set long mode gdt ----- ;;
+
+;; gdt descriptor obtained from existing gdt
+section .data
+gdt_descriptor:
+resw 1
+resd 1
+
+%include "gdt.asmh"
+
+section .text
+set_gdt:
+
+
+;; obtain place of current loaded gdt
+
+sgdt [gdt_descriptor]
+mov edi, [gdt_descriptor + 2]
+
+
+;; set existing gdt long and 32 bit flags to 1
+
+add edi, 8
+mov al, [edi + 6]
+or  al, 00100000b
+and al, 10111111b
+mov [edi+6], al
+
+add edi, 8
+
+mov al, [edi + 6]
+or  al, 00100000b
+and al, 10111111b
+mov [edi+6], al
+
+;; gdt modified, return
 ret
