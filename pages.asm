@@ -15,16 +15,16 @@ global pml4
 ;; ok
 
 section .pml4
-pml4:
+pml4: resq 1
 
 section .pdpt_0
-pdpt:
+pdpt: resq 1
 
 section .pd_0
-pd:
+pd: resq 1
 
 section .pt_0
-pt:
+pt: resq 1
 
 
 section .text
