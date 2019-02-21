@@ -2,9 +2,9 @@
 %ifndef PUTSTR_H
 %define PUTSTR_H
 
-extern putstr
+extern putstr_32
+extern putstr_64
 extern putstr_current_line
-extern scroll_down
 
 
 ; macro puts {{{
@@ -12,8 +12,12 @@ extern scroll_down
  section .data
  %%str: db %1, 0
  section .text
- mov esi, %%str
- call putstr
+ %if __BITS__ == 32
+   mov esi, %%str
+ %else
+   mov rsi, %%str
+ %endif
+ call putstr_%[__BITS__]
 %endmacro
 ; }}}
 

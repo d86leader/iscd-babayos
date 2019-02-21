@@ -3,9 +3,8 @@
 [BITS 32]
 
 
-global putstr
+global putstr_32
 global putstr_current_line
-global scroll_down
 
 section .text
 ; putstr {{{
@@ -16,7 +15,7 @@ section .text
 ;;    ebx - current colour
 ;;    ecx - symbols left in current line until end
 ;;    edx - function to call / its return code
-putstr:
+putstr_32:
  mov edi, [putstr_current_line]
  xor ebx, ebx
  mov bl, 0x07
@@ -31,7 +30,7 @@ putstr:
  jmp .putchar_loop
 
 .handle_special:
- mov edx, [special_char_handlers + eax*4]
+ mov edx, [special_char_handlers_32 + eax*4]
  call edx
  ;; return code is in edx, nonzero means stop
  test edx, edx
@@ -166,7 +165,7 @@ putstr_current_line: dd 0
 
 dd 0,0,0,0 ;; just in case
 
-special_char_handlers:
+special_char_handlers_32:
 dd null_handle       ;; 0
 times 7 dd no_handle ;; 1-7
 dd backspace_handle  ;; 8
@@ -177,3 +176,5 @@ dd cr_handle         ;; 13 - carriage return
 dd shift_out_handle  ;; 14 - shift-out - color off
 dd shift_in_handle   ;; 15 - shift-in - color on
 times 16 dd no_handle
+
+
