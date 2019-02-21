@@ -41,7 +41,7 @@ gdb:
 #compiling asm files
 
 ASM = nasm
-ASMFLAGS = -f elf64
+ASMFLAGS = -f elf64 -F dwarf -g
 LDFLAGS = -m elf_x86_64 -T linker.ld
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
