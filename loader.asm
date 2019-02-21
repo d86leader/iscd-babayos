@@ -57,7 +57,7 @@ istruc gdt_entry
   at gdt_entry.base16,  dw 0
   at gdt_entry.base24,  db 0
   at gdt_entry.access,  db 10011010b
-  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
+  at gdt_entry.limit20_flags, db (1100b << 4) | 0x0f
   at gdt_entry.base32,  db 0
 iend
 ;; data sector, 0x10
@@ -66,7 +66,7 @@ istruc gdt_entry
   at gdt_entry.base16,  dw 0
   at gdt_entry.base24,  db 0
   at gdt_entry.access,  db 10010010b
-  at gdt_entry.limit20_flags, db (1100b << 4) | 0xff
+  at gdt_entry.limit20_flags, db (1100b << 4) | 0x0f
   at gdt_entry.base32,  db 0
 iend
 .end:
