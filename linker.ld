@@ -13,7 +13,7 @@ SECTIONS
   .rodata : { *(.rodata) }
   .bss : { *(.bss) }
 
-  .idt : ALIGN(0x1000)
+  .idt : ALIGN(0x10)
   {
     build/interrupts.o(.idt)
   }

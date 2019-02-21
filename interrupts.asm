@@ -34,14 +34,14 @@ set_int_handler:
 
 all_int_handler:
   mov rax, 228
-  iret
+  iretq
 
 
 section .data
 
 idt_descriptor:
   dw plain_idt.size - 1
-  dd plain_idt
+  dq plain_idt
 
 
 ; struc idt_entry {{{
@@ -68,7 +68,7 @@ istruc idt_entry
   at idt_entry.flags,    db 10001110b | (%1 << 5)
   at idt_entry.offset32, dw 0    ;; offset higher bytes
   at idt_entry.offset64, dd 0
-  at idt_entry.zero,     dd 0
+  at idt_entry.zero,     dd 0    ;; reserved padding
 iend
 %endmacro
 ; }}}
@@ -91,13 +91,13 @@ iend
 
 
 
-;; align idt on 8 byte boundary
-align 8,db 0
-
 section .idt
+
+;; this section is aligned on 16 byte boundary in linker script
 
 plain_idt:
 %rep 64
+  align 16, db 0
   def_int_gate 00b
 %endrep
 .size equ $ - plain_idt
