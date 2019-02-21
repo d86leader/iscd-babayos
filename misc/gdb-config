@@ -1,5 +1,6 @@
 set architecture i386:x86-64:intel
 set disassembly-flavor intel
+add-symbol-file build/kernel.elf 0x7e00
 
 target remote localhost:1234
 layout regs

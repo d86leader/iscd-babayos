@@ -2,6 +2,7 @@ DISKNAME = build/disk.img
 LOADERNAME = build/loader.o
 LOADERCODE = loader.asm
 KERNELNAME = build/kernel
+KERNELSYMBOLS = build/kernel.elf
 KERNELBINARIES = build/kernel.o build/putstr.o build/interrupts.o build/pages.o
 MAGICNUMBERFILE = misc/magic_number
 
@@ -24,7 +25,7 @@ QEMUDISK = -drive file=$(DISKNAME),format=raw
 run:
 	$(QEMU) $(QEMUFLAGS) $(QEMUDISK)
 
-run-server:
+run-server:  $(KERNELSYMBOLS)
 	$(QEMU) $(QEMUSERVER) $(QEMUFLAGS) $(QEMUDISK)
 
 
@@ -41,7 +42,7 @@ gdb:
 
 ASM = nasm
 ASMFLAGS = -f elf64
-LDFLAGS = --oformat=binary -m elf_x86_64 -T linker.ld
+LDFLAGS = -m elf_x86_64 -T linker.ld
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
 	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))
@@ -51,6 +52,9 @@ build/%.o: %.asm *.asmh
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(KERNELNAME): $(KERNELBINARIES)
+	ld --oformat=binary $(LDFLAGS) -o $@ $^
+
+$(KERNELSYMBOLS): $(KERNELBINARIES)
 	ld $(LDFLAGS) -o $@ $^
 
 
