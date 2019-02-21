@@ -107,18 +107,35 @@ handler_set_loop:
   call set_int_handler
   loop handler_set_loop
 
+mov rsi, some_special_handler
+mov rdi, 50
+call set_int_handler
+
 lidt [idt_descriptor]
 PUTS "Succesfully loaded idtd"
 
 ;; Test if interrupts work
 
-int 48
-
+int 50
+cmp rax, 1488
+jne hang_machine
+int 49
 cmp rax, 228
 jne hang_machine
-PUTS "Interrupt executed successfully"
+
+PUTS "Interrupts executed successfully"
 jmp hang_machine
 
 
 hang_machine:
  jmp hang_machine
+
+
+;; -- Test interrupt handlers -- ;;
+
+all_int_handler:
+  mov rax, 228
+  iretq
+some_special_handler:
+ mov rax, 1488
+ iretq

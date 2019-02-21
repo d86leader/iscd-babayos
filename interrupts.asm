@@ -4,7 +4,6 @@
 
 global idt_descriptor
 global set_int_handler
-global all_int_handler
 
 section .text
 
@@ -30,11 +29,6 @@ set_int_handler:
 
  ret
 ; }}}
-
-
-all_int_handler:
-  mov rax, 228
-  iretq
 
 
 section .data

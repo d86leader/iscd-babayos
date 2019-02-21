@@ -4,6 +4,5 @@
 
 extern idt_descriptor
 extern set_int_handler
-extern all_int_handler
 
 %endif ;; INTERRUPTS_H
