@@ -103,21 +103,15 @@ mov gs, ax
 mov ss, ax
 mov es, ax
 
-;mov rax, 0x6161616161616161
-;xor rdi, rdi
-;mov edi, [putstr_current_line]
-;mov [rdi], rax
-
 PUTS "Succesfully entered 64-bit long mode"
 
-jmp hang_machine
 
 ;; -- Load interrupt routines to idt -- ;;
 
-mov ecx, 64
+mov rcx, 64
 handler_set_loop:
-  mov esi, all_int_handler
-  mov edi, ecx
+  mov rsi, all_int_handler
+  mov rdi, rcx
   call set_int_handler
   loop handler_set_loop
 
@@ -128,7 +122,7 @@ PUTS "Succesfully loaded idtd"
 
 int 48
 
-cmp eax, 228
+cmp rax, 228
 jne hang_machine
 PUTS "Interrupt executed successfully"
 jmp hang_machine

@@ -1,6 +1,6 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
 
-[BITS 32]
+[BITS 64]
 
 global idt_descriptor
 global set_int_handler
@@ -11,27 +11,29 @@ section .text
 ;; sets the handler for n-th interrupt to given address
 ; set_int_handler {{{
 ;; ARGS
-;;    esi - address of handler
-;;    edi - number of handler
+;;    rsi - address of handler
+;;    rdi - number of handler
 ;; modifies eax
 set_int_handler:
- shl edi, 3
- add edi, plain_idt
+ shl rdi, 4
+ add rdi, plain_idt
 
- mov eax, esi
- and eax, 0xffff
- mov [edi + idt_entry.offset16], ax
+ mov rax, rsi
+ and rax, 0xffff
+ mov [rdi + idt_entry.offset16], ax
 
- shr esi, 16
- mov [edi + idt_entry.offset32], si
+ shr rsi, 16
+ mov [rdi + idt_entry.offset32], si
+
+ shr rsi, 16
+ mov [rdi + idt_entry.offset64], esi
 
  ret
 ; }}}
 
 
-;; e05b ?
 all_int_handler:
-  mov eax, 228
+  mov rax, 228
   iret
 
 
@@ -45,10 +47,12 @@ idt_descriptor:
 ; struc idt_entry {{{
 struc idt_entry
   .offset16: resw 1
-  .segment: resw 1
-  .zero: resb 1
-  .flags: resb 1
+  .segment:  resw 1
+  .ist:      resb 1
+  .flags:    resb 1
   .offset32: resw 1
+  .offset64: resd 1
+  .zero:     resd 1
 endstruc
 ; }}}
 
@@ -59,10 +63,12 @@ endstruc
 istruc idt_entry
   at idt_entry.offset16, dw 0    ;; offset lower bytes
   at idt_entry.segment,  dw 0x8  ;; code gdt segment
-  at idt_entry.zero,     db 00000000b
+  at idt_entry.ist,      db 0    ;; don't use ist
   ;; present, %1 privelege, 0, gate size 32, 110
   at idt_entry.flags,    db 10001110b | (%1 << 5)
   at idt_entry.offset32, dw 0    ;; offset higher bytes
+  at idt_entry.offset64, dd 0
+  at idt_entry.zero,     dd 0
 iend
 %endmacro
 ; }}}
@@ -71,12 +77,14 @@ iend
 ; macro def_trap_gate {{{
 %macro def_trap_gate 1
 istruc idt_entry
-  at .offset16, dw 0    ;; offset lower bytes
-  at .segment,  dw 0x8  ;; code gdt segment
-  at .zero,     db 00000000b
+  at idt_entry.offset16, dw 0    ;; offset lower bytes
+  at idt_entry.segment,  dw 0x8  ;; code gdt segment
+  at idt_entryidt_entry.ist,      db 0    ;; don't use ist
   ;; present, %1 privelege, 0, gate size 32, 111
-  at .flags,    db 10001111b | (%1 << 5)
-  at .offset32, dw 0    ;; offset higher bytes
+  at idt_entry.flags,    db 10001111b | (%1 << 5)
+  at idt_entry.offset32, dw 0    ;; offset higher bytes
+  at idt_entry.offset64, dd 0
+  at idt_entry.zero,     dd 0
 iend
 %endmacro
 ; }}}
