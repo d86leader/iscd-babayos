@@ -103,6 +103,13 @@ mov gs, ax
 mov ss, ax
 mov es, ax
 
+;mov rax, 0x6161616161616161
+;xor rdi, rdi
+;mov edi, [putstr_current_line]
+;mov [rdi], rax
+
+PUTS "Succesfully entered 64-bit long mode"
+
 jmp hang_machine
 
 ;; -- Load interrupt routines to idt -- ;;
