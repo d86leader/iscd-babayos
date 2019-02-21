@@ -91,7 +91,6 @@ section .idt
 
 plain_idt:
 %rep 64
-  align 16, db 0
   def_int_gate 00b
 %endrep
 .size equ $ - plain_idt
