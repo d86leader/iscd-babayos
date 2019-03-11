@@ -35,19 +35,19 @@ set_paging:
 ;; zero out all the sections, which should be at least a kb long
 
 xor eax, eax
-mov edi, 1024
+mov edx, 1024
 
 mov edi, pml4
-mov ecx, edi
+mov ecx, edx
 rep stosd
 mov edi, pdpt
-mov ecx, edi
+mov ecx, edx
 rep stosd
 mov edi, pd
-mov ecx, edi
+mov ecx, edx
 rep stosd
 mov edi, pt
-mov ecx, edi
+mov ecx, edx
 rep stosd
 
 
