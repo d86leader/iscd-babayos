@@ -48,7 +48,7 @@ $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
 	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))
 	$(ASM) -f bin $< -dsystem_sectors=$(SECS) -o $@
 
-build/%.o: %.asm *.asmh
+build/%.o: %.asm headers/*.asmh
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(KERNELNAME): $(KERNELBINARIES)

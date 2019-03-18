@@ -93,7 +93,7 @@ gdt_descriptor:
 resw 1
 resd 1
 
-%include "gdt.asmh"
+%include "headers/gdt.asmh"
 
 section .text
 set_gdt:
