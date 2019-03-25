@@ -55,11 +55,11 @@ initialize_pic:
  ;; tell desired offsets
  mov ax, si
  out PIC1_DATA, al
- add ax, 8
+ add al, 8
  out PIC2_DATA, al
 
  ;; tell pics about each other
- mov al, 4 ;; bit mask for 2-nd pin
+ mov al, 100b ;; bit mask for 2-nd pin
  out PIC1_DATA, al
  mov al, 2 ;; second pin
  out PIC2_DATA, al
