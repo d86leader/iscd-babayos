@@ -2,8 +2,31 @@
 %ifndef INTERRUPTS_H
 %define INTERRUPTS_H
 
+
 extern idt_descriptor
 extern set_int_handler
 extern initialize_pic
+
+
+%macro end_of_interrupt 1
+  mov al, 0x20 ;; end-of-interrupt code
+  %if %1 >= 8
+    out 0xa0, al
+  %else
+    out 0x20, al
+  %endif
+%endmacro
+
+
+%macro set_interrupt_mask 1
+  %if %1 > 0xff
+    mov al, (%1 >> 8)
+    out 0xa1, al
+  %else
+    mov al, %1
+    out 0x21, al
+  %endif
+%endmacro
+
 
 %endif ;; INTERRUPTS_H
