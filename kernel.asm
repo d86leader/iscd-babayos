@@ -124,7 +124,26 @@ cmp rax, 228
 jne hang_machine
 
 PUTS "Interrupts executed successfully"
-jmp hang_machine
+
+;; PIC initialization
+
+;; irqs start at 0x20 = 32
+mov rsi, 32
+;; ignore all interrupts
+mov r9, 0xff
+mov r10, 0xff
+call initialize_pic
+
+int 50
+cmp rax, 1488
+jne hang_machine
+int 32
+cmp rax, 228
+jne hang_machine
+
+PUTS "Interrputs set successfully probably"
+
+
 
 
 hang_machine:
