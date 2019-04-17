@@ -22,4 +22,6 @@ SECTIONS
   .pdpt_0 : ALIGN(0x1000) {}
   .pd_0   : ALIGN(0x1000) {}
   .pt_0   : ALIGN(0x1000) {}
+
+  .kernel_runtime : ALIGN(0x1000) {}
 }

@@ -1,0 +1,22 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef ALLOC_PAGE_H
+%define ALLOC_PAGE_H
+
+
+;; Whenever in compile time I know I will need a page in runtime, I use this
+;; macro to get one
+%ifndef last_page_addr
+%define last_page_addr base_page_addr
+%endif
+
+%macro alloc_page 0
+  %if __BITS__ == 32
+    mov rax, last_page_addr
+  %else
+    mov eax, last_page_addr
+  %endif
+  %define last_page_addr last_page_addr + 0x1000
+%endmacro
+
+
+%endif ;; ALLOC_PAGE_H
