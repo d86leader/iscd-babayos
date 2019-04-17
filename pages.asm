@@ -7,7 +7,12 @@ global pml4
 global set_gdt
 global gdt_descriptor
 
+%include "headers/alloc_page.asmh"
+
 ;; ----- data sections ----- ;;
+
+section .kernel_runtime:
+base_page_addr: resq 1
 
 ;; these sections are used to store paging tables. They are aligned by 4kb by
 ;; linker. The three tables: pml4, pdpt and pd - have only one entry present,
@@ -30,14 +35,23 @@ section .text
 
 ;; ----- table initialization ----- ;;
 
+; set_paging {{{
+;; SUBROUTINE
+;; modifies
+;;    ebx - pointer to pml4 start
+;;    eax, ecx, edx, edi, esi - junk in the end
 set_paging:
+
+;; allocate page for pml4
+alloc_page
+mov ebx, eax
 
 ;; zero out all the sections, which should be at least a kb long
 
 xor eax, eax
 mov edx, 1024
 
-mov edi, pml4
+mov edi, ebx
 mov ecx, edx
 rep stosd
 mov edi, pdpt
@@ -54,7 +68,7 @@ rep stosd
 ;; set the first entry of pml4 to pdpt_0
 mov eax, pdpt
 or eax, 11b ;; flags: present | write
-mov [pml4], eax
+mov [ebx], eax
 
 ;; set the first entry of pdpt_0 to pd_0
 mov eax, pd
@@ -80,9 +94,10 @@ mov eax, 11b ;; set flags, and only increment page offset
  jb .set_entry_loop
 
 
-;; ----- Paging done ----- ;;
+;; Paging done
 
 ret
+; }}}
 
 
 ;; ----- Set long mode gdt ----- ;;

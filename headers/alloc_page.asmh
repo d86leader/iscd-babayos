@@ -10,7 +10,7 @@
 %endif
 
 %macro alloc_page 0
-  %if __BITS__ == 32
+  %if __BITS__ == 64
     mov rax, last_page_addr
   %else
     mov eax, last_page_addr

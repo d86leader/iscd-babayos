@@ -64,7 +64,7 @@ call set_paging
 
 mov eax, 10100000b ;; PAE and PGE bits
 mov cr4, eax
-mov eax, pml4
+mov eax, ebx       ;; pointer to pml4
 mov cr3, eax
 
 mov ecx, 0xC0000080
