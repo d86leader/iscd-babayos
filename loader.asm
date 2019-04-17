@@ -37,7 +37,7 @@ gdt_descriptor:
 
 ;; ----- GDT Section ----- ;;
 
-%include "gdt.asmh"
+%include "headers/gdt.asmh"
 
 ; plain_gdt {{{
 plain_gdt:

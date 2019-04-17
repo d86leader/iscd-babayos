@@ -42,13 +42,13 @@ gdb:
 
 ASM = nasm
 ASMFLAGS = -f elf64 -F dwarf -g
-LDFLAGS = -m elf_x86_64 -T linker.ld
+LDFLAGS = -m elf_x86_64 -T misc/linker.ld
 
 $(LOADERNAME): $(LOADERCODE) $(KERNELNAME)
 	$(eval SECS := $(shell bash misc/tell_sectors.sh $(KERNELNAME)))
 	$(ASM) -f bin $< -dsystem_sectors=$(SECS) -o $@
 
-build/%.o: %.asm *.asmh
+build/%.o: %.asm headers/*.asmh
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(KERNELNAME): $(KERNELBINARIES)

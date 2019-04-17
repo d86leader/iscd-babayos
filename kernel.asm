@@ -1,10 +1,10 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
 [BITS 32]
 
-%include "fail.asmh"
-%include "putstr.asmh"
-%include "interrupts.asmh"
-%include "pages.asmh"
+%include "headers/fail.asmh"
+%include "headers/putstr.asmh"
+%include "headers/interrupts.asmh"
+%include "headers/pages.asmh"
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
