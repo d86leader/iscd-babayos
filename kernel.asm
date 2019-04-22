@@ -5,6 +5,7 @@
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
 %include "headers/pages.asmh"
+%include "headers/alloc_page.asmh"
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
@@ -124,7 +125,12 @@ cmp rax, 228
 jne hang_machine
 
 PUTS "Interrupts executed successfully"
-jmp hang_machine
+
+;; Test compile-time page allocation
+
+alloc_test:
+alloc_page rax
+alloc_page rax
 
 
 hang_machine:
