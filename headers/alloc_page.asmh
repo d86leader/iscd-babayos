@@ -9,12 +9,8 @@
 %define last_page_addr base_page_addr
 %endif
 
-%macro alloc_page 0
-  %if __BITS__ == 64
-    mov rax, last_page_addr
-  %else
-    mov eax, last_page_addr
-  %endif
+%macro alloc_page 1
+  mov %1, last_page_addr
   %define last_page_addr last_page_addr + 0x1000
 %endmacro
 

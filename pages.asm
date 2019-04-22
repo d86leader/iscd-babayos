@@ -43,15 +43,15 @@ section .text
 set_paging:
 
 ;; allocate page for pml4
-alloc_page
-mov ebx, eax
+;alloc_page ebx
+mov ebx, pml4
 
 ;; zero out all the sections, which should be at least a kb long
 
 xor eax, eax
 mov edx, 1024
 
-mov edi, ebx
+mov edi, pml4
 mov ecx, edx
 rep stosd
 mov edi, pdpt
