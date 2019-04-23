@@ -1,11 +1,17 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
-[BITS 32]
 
 %include "headers/fail.asmh"
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
 %include "headers/pages.asmh"
-%include "headers/alloc_page.asmh"
+%include "headers/runtime_memory.asmh"
+
+
+[BITS 32]
+
+
+;; ----- Initialization after real mode ----- ;;
+
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
@@ -42,7 +48,7 @@ jmp hang_machine_32
 A20_set:
 
 
-;; ----- Test if long mode supported ----- ;;
+;; -- Test if long mode supported -- ;;
 
 mov eax, 0x80000000
 cpuid
@@ -87,7 +93,13 @@ jmp 0x8:long_mode_start
 hang_machine_32:
  jmp hang_machine_32
 
+
 [BITS 64]
+
+
+;; ----- Inititalization after short mode ----- ;;
+
+
 long_mode_start:
 mov ax, 0x10
 mov ds, ax
@@ -131,6 +143,8 @@ PUTS "Interrupts executed successfully"
 alloc_test:
 alloc_page rax
 alloc_page rax
+mov rax, pml4
+
 
 
 hang_machine:
