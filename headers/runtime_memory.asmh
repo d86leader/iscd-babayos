@@ -3,15 +3,21 @@
 %define ALLOC_PAGE_H
 
 
+extern base_page_addr
+
+
 ;; Whenever in compile time I know I will need a page in runtime, I use this
 ;; macro to get one
-%ifndef last_page_addr
-%define last_page_addr base_page_addr
+%ifndef last_page_offset
+  %xdefine last_page_offset 0
+%else
+  %error "Redefining last_page_offset"
 %endif
 
 %macro alloc_page 1
-  mov %1, last_page_addr
-  %define last_page_addr last_page_addr + 0x1000
+  mov %1, base_page_addr
+  add %1, last_page_offset
+  %xdefine last_page_offset (last_page_offset + 0x1000)
 %endmacro
 
 

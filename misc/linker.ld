@@ -23,5 +23,5 @@ SECTIONS
   .pd_0   : ALIGN(0x1000) {}
   .pt_0   : ALIGN(0x1000) {}
 
-  .kernel_runtime : ALIGN(0x1000) {}
+  .kernel_runtime : ALIGN(0x1000) {build/runtime_memory.o(.kernel_runtime)}
 }

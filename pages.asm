@@ -7,13 +7,7 @@ global pml4
 global set_gdt
 global gdt_descriptor
 
-%include "headers/alloc_page.asmh"
-
 ;; ----- data sections ----- ;;
-
-section .kernel_runtime:
-base_page_addr: resq 1
-
 ;; these sections are used to store paging tables. They are aligned by 4kb by
 ;; linker. The three tables: pml4, pdpt and pd - have only one entry present,
 ;; and they point at the next table. The last one, pt, maps all 4kb pages as
