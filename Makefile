@@ -8,8 +8,9 @@ MAGICNUMBERFILE = misc/magic_number
 
 
 all: disk run
-server: disk run-server
+server: disk elf run-server
 disk: $(DISKNAME)
+elf: $(KERNELSYMBOLS)
 
 clean:
 	rm build/*
@@ -25,7 +26,7 @@ QEMUDISK = -drive file=$(DISKNAME),format=raw
 run:
 	$(QEMU) $(QEMUFLAGS) $(QEMUDISK)
 
-run-server:  $(KERNELSYMBOLS)
+run-server:
 	$(QEMU) $(QEMUSERVER) $(QEMUFLAGS) $(QEMUDISK)
 
 
