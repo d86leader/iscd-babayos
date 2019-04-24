@@ -67,7 +67,20 @@ PUTS "Long mode is availible"
 
 ;; ----- Entering long mode ----- ;;
 
+mov ebp, esp
+_constexpr_alloc_page ebx
+push ebx ;; pml4
+_constexpr_alloc_page eax
+push eax ;; pdpt_0
+_constexpr_alloc_page eax
+push eax ;; pd_0
+_constexpr_alloc_page eax
+push eax ;; pt_0
+
 call set_paging
+paging_set:
+mov esp, ebp
+
 
 mov eax, 10100000b ;; PAE and PGE bits
 mov cr4, eax

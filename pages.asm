@@ -7,77 +7,68 @@ global pml4
 global set_gdt
 global gdt_descriptor
 
-;; ----- data sections ----- ;;
-;; these sections are used to store paging tables. They are aligned by 4kb by
-;; linker. The three tables: pml4, pdpt and pd - have only one entry present,
-;; and they point at the next table. The last one, pt, maps all 4kb pages as
-;; present. I use 32Mb of memory and map all of them
-section .pml4
-pml4: resq 1
-
-section .pdpt_0
-pdpt: resq 1
-
-section .pd_0
-pd: resq 1
-
-section .pt_0
-pt: resq 1
-
-
 section .text
 
 ;; ----- table initialization ----- ;;
 
+;; The three tables: pml4, pdpt and pd - have only one entry present,
+;; and they point at the next table. The last one, pt, maps all 4kb pages as
+;; present. I use 32Mb of memory and map all of it
+
 ; set_paging {{{
 ;; SUBROUTINE
+;; ARGS
+;;    esp - pointer to [pt_0, pd_0, pdpt_0, pml4]
 ;; modifies
-;;    ebx - pointer to pml4 start
-;;    eax, ecx, edx, edi, esi - junk in the end
+;;    eax, ecx, edx, edi - junk in the end
 set_paging:
 
-;; allocate page for pml4
-;alloc_page ebx
-mov ebx, pml4
+%define pml4_ptr esp + 16
+%define pdpt_ptr esp + 12
+%define pd_ptr   esp + 8
+%define pt_ptr   esp + 4
 
-;; zero out all the sections, which should be at least a kb long
+;; zero out all the sections
 
 xor eax, eax
 mov edx, 1024
 
-mov edi, pml4
+mov edi, [pml4_ptr]
 mov ecx, edx
 rep stosd
-mov edi, pdpt
+mov edi, [pdpt_ptr]
 mov ecx, edx
 rep stosd
-mov edi, pd
+mov edi, [pd_ptr]
 mov ecx, edx
 rep stosd
-mov edi, pt
+mov edi, [pt_ptr]
 mov ecx, edx
 rep stosd
 
 
-;; set the first entry of pml4 to pdpt_0
-mov eax, pdpt
+;; set the first entry of pml4 to pointer to pdpt
+mov edi, [pml4_ptr]
+mov eax, [pdpt_ptr]
+or eax, 11b ;; flags: write | present
+mov [edi], eax
+
+;; set the first entry of pdpt to pointer to pd
+mov edi, [pdpt_ptr]
+mov eax, [pd_ptr]
 or eax, 11b ;; flags: present | write
-mov [ebx], eax
-
-;; set the first entry of pdpt_0 to pd_0
-mov eax, pd
-or eax, 11b ;; flags: present | write
-mov [pdpt], eax
+mov [edi], eax
 
 ;; set the first entry of pd_0 to pt_0
-mov eax, pt
+mov edi, [pd_ptr]
+mov eax, [pt_ptr]
 or eax, 11b ;; flags: present | write
-mov [pd], eax
+mov [edi], eax
 
 
 ;; set all page table entries to indentity mapping
 
-mov edi, pt
+mov edi, [pt_ptr]
 mov eax, 11b ;; set flags, and only increment page offset
 
 .set_entry_loop:
