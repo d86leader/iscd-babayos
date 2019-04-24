@@ -138,14 +138,6 @@ jne hang_machine
 
 PUTS "Interrupts executed successfully"
 
-;; Test compile-time page allocation
-
-alloc_test:
-alloc_page rax
-alloc_page rax
-mov rax, pml4
-
-
 
 hang_machine:
  jmp hang_machine

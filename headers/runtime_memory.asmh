@@ -8,16 +8,37 @@ extern base_page_addr
 
 ;; Whenever in compile time I know I will need a page in runtime, I use this
 ;; macro to get one
-%ifndef last_page_offset
-  %xdefine last_page_offset 0
-%else
-  %error "Redefining last_page_offset"
-%endif
 
-%macro alloc_page 1
-  mov %1, base_page_addr
-  add %1, last_page_offset
-  %xdefine last_page_offset (last_page_offset + 0x1000)
+;; memory.md says stack starts here
+%define lower_memory_end 0x7000
+
+%xdefine use_higher_memory 0
+%xdefine last_page_offset 0
+
+%macro _constexpr_alloc_page 1
+
+  %if use_higher_memory == 1
+
+    ;; for higher memory we have a pointer to its start, as defined by linker,
+    ;; and offset to current empty page
+    mov %1, base_page_addr
+    add %1, last_page_offset
+    %xdefine last_page_offset (last_page_offset + 0x1000)
+
+  %else
+
+    ;; for lower memory we just know the constants
+    mov %1, last_page_offset
+    %xdefine last_page_offset (last_page_offset + 0x1000)
+
+    %if last_page_offset == lower_memory_end
+      ;; switch to higher memory when reached the end of lower
+      %xdefine use_higher_memory 1
+      %xdefine last_page_offset 0
+    %endif
+
+  %endif
+
 %endmacro
 
 
