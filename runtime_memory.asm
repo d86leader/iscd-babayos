@@ -7,5 +7,5 @@ global base_page_addr
 
 [BITS 64]
 
-section .kernel_runtime:
+section .kernel_runtime
 base_page_addr: resq 1
