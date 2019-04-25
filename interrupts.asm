@@ -5,6 +5,7 @@
 global idt_descriptor
 global set_int_handler
 global initialize_pic
+global initialize_pit
 
 section .text
 
@@ -78,6 +79,37 @@ initialize_pic:
  ret
 %pop pic
 ; }}}
+
+
+;; Initializes timer to send irq0 at desired rate
+; initialize_pit {{{
+;; ARGS
+;;    r8 - timer rate
+;; modifies rax
+initialize_pit:
+%push pit
+%define PIT_C0 0x40
+%define PIT_COMMAND 0x43
+ ;; disable interrupts
+ pushfq
+ cli
+
+ ;; channel 0, lobyte/hibyte, rate generator
+ mov al, 00110100b
+ out PIT_COMMAND, al
+
+ ;; low byte of reload value
+ mov al, r8b
+ out PIT_C0, al
+ ;; high byte of reload value
+ shr r8, 8
+ mov al, r8b
+ out PIT_C0, al
+
+ popfq
+ ret
+; }}}
+
 
 
 section .data

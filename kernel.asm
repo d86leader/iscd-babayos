@@ -142,6 +142,10 @@ sti
 
 PUTS "PIC set up successfully probably"
 
+;; once a second
+mov r8, 0xffff
+call initialize_pit
+
 ;; enable timer interrupts
 set_interrupt_mask 11111110b
 
