@@ -137,18 +137,13 @@ mov rsi, 32
 mov r9, 0xff
 mov r10, 0xff
 call initialize_pic
-
-int 50
-cmp rax, 1488
-jne hang_machine
-int 34
-cmp rax, 228
-jne hang_machine
+;; enable maskable interrupts
+sti
 
 PUTS "PIC set up successfully probably"
 
+;; enable timer interrupts
 set_interrupt_mask 11111110b
-sti
 
 
 
