@@ -12,6 +12,7 @@ extern initialize_pic
   mov al, 0x20 ;; end-of-interrupt code
   %if %1 >= 8
     out 0xa0, al
+    out 0x20, al
   %else
     out 0x20, al
   %endif
