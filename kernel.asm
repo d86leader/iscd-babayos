@@ -111,6 +111,10 @@ mov rsi, some_special_handler
 mov rdi, 50
 call set_int_handler
 
+mov rsi, pit_handler
+mov rdi, 32
+call set_int_handler
+
 lidt [idt_descriptor]
 PUTS "Succesfully loaded idtd"
 
@@ -137,11 +141,14 @@ call initialize_pic
 int 50
 cmp rax, 1488
 jne hang_machine
-int 32
+int 34
 cmp rax, 228
 jne hang_machine
 
-PUTS "Interrputs set successfully probably"
+PUTS "PIC set up successfully probably"
+
+set_interrupt_mask 11111110b
+sti
 
 
 
@@ -157,4 +164,8 @@ all_int_handler:
   iretq
 some_special_handler:
  mov rax, 1488
+ iretq
+pit_handler:
+ SAFE_PUTS "Itervalled out"
+ end_of_interrupt 0
  iretq
