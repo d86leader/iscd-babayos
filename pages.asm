@@ -69,18 +69,24 @@ mov [edi], eax
 ;; set all page table entries to indentity mapping
 
 mov edi, [pt_ptr]
+mov ecx, edi
+add ecx, 0x1000 ;; limit for one page
 mov eax, 11b ;; set flags, and only increment page offset
 
 .set_entry_loop:
  mov [edi], eax
  add eax, 0x1000
  add edi, 8
+ cmp edi, 0x7000
+ jge .end
  cmp eax, 1024*1024*32 ;; 32 MiB
- jb .set_entry_loop
+ jge .end
+ jmp .set_entry_loop
 
 
 ;; Paging done
 
+.end:
 ret
 ; }}}
 
