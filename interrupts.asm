@@ -168,10 +168,11 @@ iend
 
 section .idt
 
-;; this section is aligned on 16 byte boundary in linker script
+;; this section is aligned on page boundary in linker script
+;; and it uses exactly a page of space
 
 plain_idt:
-%rep 64
+%rep 256
   def_int_gate 00b
 %endrep
 .size equ $ - plain_idt

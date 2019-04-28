@@ -1,10 +1,17 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
-[BITS 32]
 
 %include "headers/fail.asmh"
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
 %include "headers/pages.asmh"
+%include "headers/runtime_memory.asmh"
+
+
+[BITS 32]
+
+
+;; ----- Initialization after real mode ----- ;;
+
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
@@ -41,7 +48,7 @@ jmp hang_machine_32
 A20_set:
 
 
-;; ----- Test if long mode supported ----- ;;
+;; -- Test if long mode supported -- ;;
 
 mov eax, 0x80000000
 cpuid
@@ -60,11 +67,24 @@ PUTS "Long mode is availible"
 
 ;; ----- Entering long mode ----- ;;
 
+mov ebp, esp
+_constexpr_alloc_page ebx
+push ebx ;; pml4
+_constexpr_alloc_page eax
+push eax ;; pdpt_0
+_constexpr_alloc_page eax
+push eax ;; pd_0
+_constexpr_alloc_page eax
+push eax ;; pt_0
+
 call set_paging
+paging_set:
+mov esp, ebp
+
 
 mov eax, 10100000b ;; PAE and PGE bits
 mov cr4, eax
-mov eax, pml4
+mov eax, ebx       ;; pointer to pml4
 mov cr3, eax
 
 mov ecx, 0xC0000080
@@ -86,7 +106,13 @@ jmp 0x8:long_mode_start
 hang_machine_32:
  jmp hang_machine_32
 
+
 [BITS 64]
+
+
+;; ----- Inititalization after short mode ----- ;;
+
+
 long_mode_start:
 mov ax, 0x10
 mov ds, ax

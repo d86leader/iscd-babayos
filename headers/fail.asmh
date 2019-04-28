@@ -10,8 +10,7 @@ extern putstr
 %macro fail_with 1
   section .text
 
-  mov esi, %%fail_message
-  call putstr
+  PUTS %%fail_message
 
   %%hang_ptr:
     jmp %%hang_ptr
