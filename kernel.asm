@@ -1,10 +1,10 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
 [BITS 32]
 
-%include "fail.asmh"
-%include "putstr.asmh"
-%include "interrupts.asmh"
-%include "pages.asmh"
+%include "headers/fail.asmh"
+%include "headers/putstr.asmh"
+%include "headers/interrupts.asmh"
+%include "headers/pages.asmh"
 
 system_start: ;; 0x7e00
 mov ax, 0x10 ;; data segment
@@ -111,6 +111,10 @@ mov rsi, some_special_handler
 mov rdi, 50
 call set_int_handler
 
+mov rsi, pit_handler
+mov rdi, 32
+call set_int_handler
+
 lidt [idt_descriptor]
 PUTS "Succesfully loaded idtd"
 
@@ -124,7 +128,28 @@ cmp rax, 228
 jne hang_machine
 
 PUTS "Interrupts executed successfully"
-jmp hang_machine
+
+;; PIC initialization
+
+;; irqs start at 0x20 = 32
+mov rsi, 32
+;; ignore all interrupts
+mov r9, 0xff
+mov r10, 0xff
+call initialize_pic
+;; enable maskable interrupts
+sti
+
+PUTS "PIC set up successfully probably"
+
+;; once a second
+mov r8, 0xffff
+call initialize_pit
+
+;; enable timer interrupts
+set_interrupt_mask 11111110b
+
+
 
 
 hang_machine:
@@ -138,4 +163,8 @@ all_int_handler:
   iretq
 some_special_handler:
  mov rax, 1488
+ iretq
+pit_handler:
+ SAFE_PUTS "Itervalled out"
+ end_of_interrupt 0
  iretq

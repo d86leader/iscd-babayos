@@ -1,0 +1,51 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef PUTSTR_H
+%define PUTSTR_H
+
+extern putstr_32
+extern putstr_64
+extern putstr_current_line
+
+
+; macro puts {{{
+%macro PUTS 1
+ section .data
+  %%str: db %1, 0
+ section .text
+  %if __BITS__ == 32
+    mov esi, %%str
+  %else
+    mov rsi, %%str
+  %endif
+  call putstr_%[__BITS__]
+%endmacro
+; }}}
+
+
+;; Save all registers and put string
+;; Only 64 bit version
+; macro sage_puts {{{
+%macro SAFE_PUTS 1
+ section .data
+  %%str: db %1, 0
+ section .text
+  push rax
+  push rbx
+  push rcx
+  push rdx
+  push rsi
+  push rdi
+
+  mov rsi, %%str
+  call putstr_64
+
+  pop rdi
+  pop rsi
+  pop rdx
+  pop rcx
+  pop rbx
+  pop rax
+%endmacro
+; }}}
+
+%endif ;;PUTSTR_H

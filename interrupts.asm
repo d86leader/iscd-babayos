@@ -4,6 +4,8 @@
 
 global idt_descriptor
 global set_int_handler
+global initialize_pic
+global initialize_pit
 
 section .text
 
@@ -29,6 +31,85 @@ set_int_handler:
 
  ret
 ; }}}
+
+
+;; initialize pic8259 and its slave to specified offset with specified
+;; interrupt masks
+; initialize_pic {{{
+;; ARGS
+;;    rsi - first interrupt vector to be used by pics
+;;    r9  - mask for first pic
+;;    r10 - mask for second pic
+;; modifies rax
+%push pic
+%define PIC1_COMMAND 0x20
+%define PIC1_DATA    0x21
+%define PIC2_COMMAND 0xa0
+%define PIC2_DATA    0xa1
+initialize_pic:
+
+ ;; start initialization sequence with 4-th step
+ mov al, 00010001b
+ out PIC1_COMMAND, al
+ out PIC2_COMMAND, al
+
+ ;; tell desired offsets
+ mov ax, si
+ out PIC1_DATA, al
+ add al, 8
+ out PIC2_DATA, al
+
+ ;; tell pics about each other
+ mov al, 100b ;; bit mask for 2-nd pin
+ out PIC1_DATA, al
+ mov al, 2 ;; second pin
+ out PIC2_DATA, al
+
+ ;; use 8086 mode
+ mov al, 1
+ out PIC1_DATA, al
+ out PIC2_DATA, al
+
+ ;; set masks
+ mov al, r9b
+ out PIC1_DATA, al
+ mov al, r10b
+ out PIC2_DATA, al
+
+ ret
+%pop pic
+; }}}
+
+
+;; Initializes timer to send irq0 at desired rate
+; initialize_pit {{{
+;; ARGS
+;;    r8 - timer rate
+;; modifies rax
+initialize_pit:
+%push pit
+%define PIT_C0 0x40
+%define PIT_COMMAND 0x43
+ ;; disable interrupts
+ pushfq
+ cli
+
+ ;; channel 0, lobyte/hibyte, rate generator
+ mov al, 00110100b
+ out PIT_COMMAND, al
+
+ ;; low byte of reload value
+ mov al, r8b
+ out PIT_C0, al
+ ;; high byte of reload value
+ shr r8, 8
+ mov al, r8b
+ out PIT_C0, al
+
+ popfq
+ ret
+; }}}
+
 
 
 section .data

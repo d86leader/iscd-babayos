@@ -15,6 +15,8 @@ section .text
 ;;    rbx - current colour
 ;;    rcx - symbols left in current line until end
 ;;    rdx - function to call / its return code
+;;    rsi - pointer to source string
+;;    rdi - pointer to destination screen
 putstr_64:
  xor rdi, rdi
  mov edi, [putstr_current_line]

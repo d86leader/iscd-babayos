@@ -1,8 +1,0 @@
-; vim: ft=nasm ts=2 sw=2 expandtab
-%ifndef INTERRUPTS_H
-%define INTERRUPTS_H
-
-extern idt_descriptor
-extern set_int_handler
-
-%endif ;; INTERRUPTS_H
