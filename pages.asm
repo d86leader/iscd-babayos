@@ -3,7 +3,6 @@
 [BITS 32]
 
 global set_paging
-global pml4
 global set_gdt
 global gdt_descriptor
 

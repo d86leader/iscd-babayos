@@ -3,7 +3,6 @@
 %define PAGES_H
 
 extern set_paging
-extern pml4
 extern set_gdt
 extern gdt_descriptor
 
