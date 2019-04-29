@@ -187,10 +187,24 @@ hang_machine:
 all_int_handler:
   mov rax, 228
   iretq
+
 some_special_handler:
  mov rax, 1488
  iretq
+
 pit_handler:
+
+section .data
+ .pit_counter: dq 1
+
+section .text
+ cmp qword [.pit_counter], qword 32
+ jb .ret
+
+ mov qword [.pit_counter], qword 0
  SAFE_PUTS "Itervalled out"
+
+.ret:
+ inc qword [.pit_counter]
  end_of_interrupt 0
  iretq
