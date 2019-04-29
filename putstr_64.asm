@@ -138,6 +138,16 @@ basic_put:
 
 
 ; basic_put_reverse {{{
+basic_put_reverse:
+  std
+  lodsb
+  cld
+  test al, al
+  jz .end
+  call putchar
+  jmp basic_put_reverse
+.end:
+  ret
 ; }}}
 
 
@@ -186,6 +196,8 @@ escape_seq: ;; parse the following escape sequence
  je escape_s
  cmp al, 'd'
  je escape_d
+ cmp al, 'x'
+ je escape_x
 
  xor rdx, rdx
  ret
@@ -208,15 +220,74 @@ escape_s:
 ; }}}
 
 
-.end:
+;; append hexadecimal number
+; escape_x {{{
+escape_x:
+ mov rdx, [rbp]
+ push rdi
+ mov rdi, number_to_str_rev
+
+.div_loop:
+ xor rax, rax
+ mov al, dl
+ and al, 0xf
+ mov al, [hex_lookup_table + rax]
+ stosb
+ shr rdx, 4
+ test rdx, rdx
+ jz .end_div
+ jmp .div_loop
+
+.end_div:
+ pop rdx
+ xchg rdx, rdi ;; now rdi is restored and rdx is old rdi
+ push rsi
+ mov rsi, rdx  ;; and now rsi is saved and equal to old rdi
+ dec rsi
+ call basic_put_reverse
+
+ ;; cleaning up
  add rbp, 8
  pop rsi
  xor rdx, rdx
  ret
+; }}}
 
+
+; escape_d {{{
 escape_d:
+ mov rax, [rbp]
+ push r8
+ mov r8, 10
+ push rdi
+ mov rdi, number_to_str_rev
+
+.div_loop:
+ xor rdx, rdx
+ div r8
+ add rdx, '0'
+ xchg rax, rdx
+ stosb
+ xchg rax, rdx
+ test rax, rax
+ jz .end_div
+ jmp .div_loop
+
+.end_div:
+ pop rdx
+ xchg rdx, rdi ;; now rdi is restored and rdx is old rdi
+ push rsi
+ mov rsi, rdx  ;; and now rsi is saved and equal to old rdi
+ dec rsi
+ call basic_put_reverse
+
+ ;; cleaning up
+ add rbp, 8
+ pop rsi
+ pop r8
  xor rdx, rdx
  ret
+; }}}
 
 ; }}}
 
@@ -237,3 +308,11 @@ dq shift_in_handle    ;; 15 - shift-in - color on
 times 11 dq no_handle ;; 16-26
 dq escape_seq         ;; 27 - escape sequences for diffrnt stuff, esp format
 times 5 dq no_handle  ;; 28-32
+
+;; Number printing functions first create a reversed string. They put it here
+db 0
+number_to_str_rev:
+times 20 db 0 ;; maximum required by decimal representation
+
+hex_lookup_table:
+db "0123456789ABCDEF"
