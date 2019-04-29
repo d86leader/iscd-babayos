@@ -33,7 +33,7 @@ putstr_64:
  jmp .putchar_loop
 
 .handle_special:
- mov rdx, [special_char_handlers_64 + rax*4]
+ mov rdx, [special_char_handlers_64 + rax*8]
  call rdx
  ;; return code is in rdx, nonzero means stop
  test rdx, rdx
