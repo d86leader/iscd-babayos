@@ -10,6 +10,7 @@ section .text
 ; putstr {{{
 ;; ARGS
 ;;    rsi - string to put, 0-terminated
+;;    rbp - any arguments to format
 ;; modifies
 ;;    rax - current symbol
 ;;    rbx - current colour
@@ -161,6 +162,43 @@ shift_in_handle: ;; set next character as color
  mov bl, al
  xor rdx, rdx
  ret
+
+escape_seq: ;; parse the following escape sequence
+ lodsb
+ cmp al, 's'
+ je escape_s
+ cmp al, 'd'
+ je escape_d
+
+ xor rdx, rdx
+ ret
+; }}}
+
+
+; escape sequence handlers {{{
+
+;; append string to output
+escape_s:
+ push rsi
+ mov rsi, [rbp]
+
+.putchar_loop:
+ lodsb
+ test al, al
+ jz .end
+ call putchar
+ jmp .putchar_loop
+
+.end:
+ add rbp, 8
+ pop rsi
+ xor rdx, rdx
+ ret
+
+escape_d:
+ xor rdx, rdx
+ ret
+
 ; }}}
 
 
@@ -168,14 +206,15 @@ shift_in_handle: ;; set next character as color
 section .data
 
 special_char_handlers_64:
-dq null_handle       ;; 0
-times 7 dq no_handle ;; 1-7
-dq backspace_handle  ;; 8
-dq null_handle       ;; 9 - tab
-dq line_feed_handle  ;; 10 - nl
-times 2 dq no_handle ;; 11-12 - vertical tab and form feed
-dq cr_handle         ;; 13 - carriage return
-dq shift_out_handle  ;; 14 - shift-out - color off
-dq shift_in_handle   ;; 15 - shift-in - color on
-times 16 dq no_handle
-
+dq null_handle        ;; 0
+times 7 dq no_handle  ;; 1-7
+dq backspace_handle   ;; 8
+dq null_handle        ;; 9 - tab
+dq line_feed_handle   ;; 10 - nl
+times 2 dq no_handle  ;; 11-12 - vertical tab and form feed
+dq cr_handle          ;; 13 - carriage return
+dq shift_out_handle   ;; 14 - shift-out - color off
+dq shift_in_handle    ;; 15 - shift-in - color on
+times 11 dq no_handle ;; 16-26
+dq escape_seq         ;; 27 - escape sequences for diffrnt stuff, esp format
+times 5 dq no_handle  ;; 28-32
