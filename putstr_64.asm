@@ -96,7 +96,6 @@ scroll_if_end:
 ; }}}
 
 
-
 ; scroll_down {{{
 ;; move all text up and free one line at the bottom
 scroll_down:
@@ -121,6 +120,24 @@ scroll_down:
  pop rsi
  pop rdi
  ret
+; }}}
+
+
+; basic_put {{{
+;; put a string in rsi to screen
+;; modifies same as putchar
+basic_put:
+  lodsb
+  test al, al
+  jz .end
+  call putchar
+  jmp basic_put
+.end:
+  ret
+; }}}
+
+
+; basic_put_reverse {{{
 ; }}}
 
 
@@ -178,16 +195,18 @@ escape_seq: ;; parse the following escape sequence
 ; escape sequence handlers {{{
 
 ;; append string to output
+; escape_s {{{
 escape_s:
  push rsi
  mov rsi, [rbp]
+ call basic_put
+ ;; cleaning up
+ add rbp, 8
+ pop rsi
+ xor rdx, rdx
+ ret
+; }}}
 
-.putchar_loop:
- lodsb
- test al, al
- jz .end
- call putchar
- jmp .putchar_loop
 
 .end:
  add rbp, 8
