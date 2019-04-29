@@ -166,7 +166,7 @@ call initialize_pic
 ;; enable maskable interrupts
 sti
 
-PUTS "PIC set up successfully probably"
+PUTS "PIC set up successfully"
 
 ;; once a second
 mov r8, 0xffff

@@ -19,6 +19,10 @@ section .text
 ;;    rsi - pointer to source string
 ;;    rdi - pointer to destination screen
 putstr_64:
+ ;; disable interrupts while printing to avoid bad state
+ pushfq
+ cli
+
  xor rdi, rdi
  mov edi, [putstr_current_line]
  xor rbx, rbx
@@ -42,6 +46,7 @@ putstr_64:
 
  call next_line
 
+ popfq
  ret
 ; }}}
 
