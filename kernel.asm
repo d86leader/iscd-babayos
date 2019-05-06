@@ -141,6 +141,10 @@ mov rsi, pit_handler
 mov rdi, 32
 call set_int_handler
 
+mov rsi, page_fault_handler
+mov rdi, 14
+call set_int_handler
+
 lidt [idt_descriptor]
 PUTS "Succesfully loaded idtd"
 
@@ -188,9 +192,11 @@ all_int_handler:
   mov rax, 228
   iretq
 
+
 some_special_handler:
  mov rax, 1488
  iretq
+
 
 pit_handler:
 
@@ -208,3 +214,18 @@ section .text
  inc qword [.pit_counter]
  end_of_interrupt 0
  iretq
+
+
+page_fault_handler:
+section .data
+ .msg: db "Caught page fault with errcode 0x", 27, 'x'
+       db " with instruction at address 0x", 27, 'x'
+       db ". Stopping", 0
+section .text
+ cli
+ mov rbp, rsp ;; we have error code and rip saved on stack already. Pass them
+              ;; to putstr
+ mov rsi, .msg
+ call putstr_64
+ jmp hang_machine
+
