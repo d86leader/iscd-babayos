@@ -48,7 +48,7 @@ set_int_handler:
 %define PIC2_DATA    0xa1
 initialize_pic:
 
- ;; start initialization sequence with 4-th step
+ ;; start initialization sequence in cascade with 4-th step
  mov al, 00010001b
  out PIC1_COMMAND, al
  out PIC2_COMMAND, al
