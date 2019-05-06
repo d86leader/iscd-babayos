@@ -145,6 +145,10 @@ mov rsi, page_fault_handler
 mov rdi, 14
 call set_int_handler
 
+mov rsi, gp_handler
+mov rdi, 13
+call set_int_handler
+
 lidt [idt_descriptor]
 PUTS "Succesfully loaded idtd"
 
@@ -219,6 +223,20 @@ section .text
 page_fault_handler:
 section .data
  .msg: db "Caught page fault with errcode 0x", 27, 'x'
+       db " with instruction at address 0x", 27, 'x'
+       db ". Stopping", 0
+section .text
+ cli
+ mov rbp, rsp ;; we have error code and rip saved on stack already. Pass them
+              ;; to putstr
+ mov rsi, .msg
+ call putstr_64
+ jmp hang_machine
+
+
+gp_handler:
+section .data
+ .msg: db "Caught general protection failure with errcode 0x", 27, 'x'
        db " with instruction at address 0x", 27, 'x'
        db ". Stopping", 0
 section .text
