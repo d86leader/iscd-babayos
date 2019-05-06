@@ -80,6 +80,9 @@ push eax ;; pt_0
 call set_paging
 paging_set:
 mov esp, ebp
+and eax, 0xfffffff0
+push dword 0
+push eax
 
 
 mov eax, 10100000b ;; PAE and PGE bits
@@ -122,6 +125,12 @@ mov ss, ax
 mov es, ax
 
 PUTS "Succesfully entered 64-bit long mode"
+pop rax
+push rax
+push rax
+mov rbp, rsp
+PUTS "Mapped d (0xx) bytes of memory for kernel"
+add rsp, 16
 
 
 ;; -- Load interrupt routines to idt -- ;;

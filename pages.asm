@@ -76,7 +76,7 @@ mov eax, 11b ;; set flags, and only increment page offset
  mov [edi], eax
  add eax, 0x1000
  add edi, 8
- cmp edi, 0x7000
+ cmp edi, ecx
  jge .end
  cmp eax, 1024*1024*32 ;; 32 MiB
  jge .end
