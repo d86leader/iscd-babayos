@@ -20,7 +20,34 @@ extern initialize_pit
 %endmacro
 
 
-%macro set_interrupt_mask 1
+%ifndef __current_interrupt_mask_master
+ %xdefine __current_interrupt_mask_master 11111111b
+ %xdefine __current_interrupt_mask_slave 11111111b
+%endif
+
+;; tell pic to unmask pin number %1 (0-15)
+%macro pic_unmask 1
+ %if %1 < 8
+   %xdefine __current_interrupt_mask_master (~(1 << %1) & __current_interrupt_mask_master)
+   set_interrupt_mask_plain  __current_interrupt_mask_master
+ %else
+   %xdefine __current_interrupt_mask_slave (~(1 << (%1 - 8)) & __current_interrupt_mask_slave)
+   set_interrupt_mask_plain (__current_interrupt_mask_slave << 8)
+ %endif
+%endmacro
+
+;; tell pic to mask pin number %1 (0-15)
+%macro pic_mask 1
+ %if %1 < 8
+   %xdefine __current_interrupt_mask_master ((1 << %1) | __current_interrupt_mask_master)
+   set_interrupt_mask_plain  __current_interrupt_mask_master
+ %else
+   %xdefine __current_interrupt_mask_slave ((1 << (%1 - 8)) | __current_interrupt_mask_slave)
+   set_interrupt_mask_plain (__current_interrupt_mask_slave << 8)
+ %endif
+%endmacro
+
+%macro set_interrupt_mask_plain 1
   %if %1 > 0xff
     mov al, (%1 >> 8)
     out 0xa1, al
