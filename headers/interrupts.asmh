@@ -6,7 +6,6 @@
 extern idt_descriptor
 extern set_int_handler
 extern initialize_pic
-extern initialize_pit
 
 
 %macro end_of_interrupt 1

@@ -5,6 +5,7 @@
 %include "headers/interrupts.asmh"
 %include "headers/pages.asmh"
 %include "headers/runtime_memory.asmh"
+%include "headers/devices.asmh"
 
 
 [BITS 32]
@@ -133,44 +134,11 @@ PUTS "Mapped d (0xx) bytes of memory for kernel"
 add rsp, 16
 
 
-;; -- Load interrupt routines to idt -- ;;
+;; Load interrupt routines to idt
 
-mov rcx, 64
-handler_set_loop:
-  mov rsi, all_int_handler
-  mov rdi, rcx
-  call set_int_handler
-  loop handler_set_loop
-
-mov rsi, some_special_handler
-mov rdi, 50
-call set_int_handler
-
-mov rsi, pit_handler
-mov rdi, 32
-call set_int_handler
-
-mov rsi, page_fault_handler
-mov rdi, 14
-call set_int_handler
-
-mov rsi, gp_handler
-mov rdi, 13
-call set_int_handler
-
+call setup_handlers
 lidt [idt_descriptor]
 PUTS "Succesfully loaded idtd"
-
-;; Test if interrupts work
-
-int 50
-cmp rax, 1488
-jne hang_machine
-int 49
-cmp rax, 228
-jne hang_machine
-
-PUTS "Interrupts executed successfully"
 
 ;; PIC initialization
 
@@ -197,62 +165,3 @@ pic_unmask 0
 
 hang_machine:
  jmp hang_machine
-
-
-;; -- Test interrupt handlers -- ;;
-
-all_int_handler:
-  mov rax, 228
-  iretq
-
-
-some_special_handler:
- mov rax, 1488
- iretq
-
-
-pit_handler:
-
-section .data
- .pit_counter: dq 1
-
-section .text
- cmp qword [.pit_counter], qword 32
- jb .ret
-
- mov qword [.pit_counter], qword 0
- SAFE_PUTS "Itervalled out"
-
-.ret:
- inc qword [.pit_counter]
- end_of_interrupt 0
- iretq
-
-
-page_fault_handler:
-section .data
- .msg: db "Caught page fault with errcode 0x", 27, 'x'
-       db " with instruction at address 0x", 27, 'x'
-       db ". Stopping", 0
-section .text
- cli
- mov rbp, rsp ;; we have error code and rip saved on stack already. Pass them
-              ;; to putstr
- mov rsi, .msg
- call putstr_64
- jmp hang_machine
-
-
-gp_handler:
-section .data
- .msg: db "Caught general protection failure with errcode 0x", 27, 'x'
-       db " with instruction at address 0x", 27, 'x'
-       db ". Stopping", 0
-section .text
- cli
- mov rbp, rsp ;; we have error code and rip saved on stack already. Pass them
-              ;; to putstr
- mov rsi, .msg
- call putstr_64
- jmp hang_machine
-

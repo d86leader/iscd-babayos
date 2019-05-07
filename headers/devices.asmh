@@ -1,0 +1,7 @@
+; vim: ft=nasm ts=2 sw=2 expandtab
+
+extern initialize_pit
+extern pit_handler
+extern page_fault_handler
+extern gp_handler
+extern setup_handlers

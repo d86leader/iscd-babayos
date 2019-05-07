@@ -24,7 +24,7 @@ extern putstr_current_line
 
 ;; Save all registers and put string
 ;; Only 64 bit version
-; macro sage_puts {{{
+; macro safe_puts {{{
 %macro SAFE_PUTS 1
  section .data
   %%str: db %1, 0

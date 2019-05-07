@@ -3,7 +3,7 @@ LOADERNAME = build/loader.o
 LOADERCODE = loader.asm
 KERNELNAME = build/kernel
 KERNELSYMBOLS = build/kernel.elf
-KERNELBINARIES = build/kernel.o build/putstr_32.o build/putstr_64.o build/interrupts.o build/pages.o build/runtime_memory.o
+KERNELBINARIES = build/kernel.o build/putstr_32.o build/putstr_64.o build/interrupts.o build/pages.o build/runtime_memory.o build/devices.o
 MAGICNUMBERFILE = misc/magic_number
 
 
