@@ -6,6 +6,7 @@
 %include "headers/pages.asmh"
 %include "headers/runtime_memory.asmh"
 %include "headers/devices.asmh"
+%include "headers/keyboard.asmh"
 
 
 [BITS 32]
@@ -159,6 +160,11 @@ call initialize_pit
 
 ;; enable timer interrupts
 pic_unmask 0
+
+;; enable keyboard interrupts
+call initialize_ps2
+PUTS "Keyaboard set up successfully"
+pic_unmask 1
 
 
 

@@ -11,6 +11,7 @@ global setup_handlers
 
 %include "headers/interrupts.asmh"
 %include "headers/putstr.asmh"
+%include "headers/keyboard.asmh"
 
 
 ;; Initializes timer to send irq0 at desired rate
@@ -59,6 +60,10 @@ setup_handlers:
   mov rdi, 32
   call set_int_handler
 
+  mov rsi, base_keyboard_handler
+  mov rdi, 33
+  call set_int_handler
+
   mov rsi, page_fault_handler
   mov rdi, 14
   call set_int_handler
@@ -81,6 +86,7 @@ stub_handler:
 
 ; pit_handler {{{
 pit_handler:
+ push rax
 
 section .data
  .pit_counter: dq 1
@@ -95,8 +101,20 @@ section .text
 .ret:
  inc qword [.pit_counter]
  end_of_interrupt 0
+ pop rax
  iretq
  ; }}}
+
+
+; base_keyboard_handler {{{
+base_keyboard_handler:
+ push rax
+ call keyboard_handler
+ end_of_interrupt 1
+ pop rax
+ iretq
+; }}}
+
 
 
 ; page_fault_handler {{{
