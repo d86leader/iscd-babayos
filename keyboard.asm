@@ -48,7 +48,7 @@ kb_read:
   test al, (1 << 5)
   jnz .timeout
   test al, 10b ;; flag: input buffer full
-  jnz .wait
+  jz .wait
 
  in al, PS_DATA
 
@@ -69,7 +69,7 @@ initialize_ps2:
  mov al, 0xa7
  out PS_COMMAND, al
 
- ret
+; ret
  ;; disable leds
  mov si, 0xed
  call kb_write
