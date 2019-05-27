@@ -69,22 +69,9 @@ initialize_ps2:
  mov al, 0xa7
  out PS_COMMAND, al
 
-; ret
- ;; disable leds
- mov si, 0xed
- call kb_write
- mov si, 111b
- call kb_write
+ ;; TODO set scan code set
 
- call kb_read
- push rax
- mov rbp, rsp
- PUTS "Got keyboard response: 0xx"
- add rsp, 8
-
- ;; set scan code set
-
- ;; enable scanning
+ ;; TODO enable scanning
 ; }}}
 
 
@@ -101,10 +88,10 @@ keyboard_handler:
  xor rax, rax
 
  in al, PS_STATUS
- push rax
+ test al, 1
+ jz .return
+
  in al, PS_DATA
- push rax
- mov rbp, rsp
 
  call nr2char
  cmp al, 255
@@ -114,13 +101,13 @@ keyboard_handler:
   mov rsi, .good_char_str
   jmp .do_print
 
- .unrecognized_char
+ .unrecognized_char:
   mov rsi, .unrecognized_str
 
- .do_print
+ .do_print:
  call putstr_64
- add rsp, 16
 
+ .return:
  pop rbp
  pop rdi
  pop rsi
