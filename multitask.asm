@@ -34,6 +34,8 @@ pit_handler:
     cmp rsi, pit_counters.end
     jb .loop
 
+
+  ;; print a message eaxh 32 ticks of counter
   section .data
     .own_counter: dw 0
   section .text
@@ -41,7 +43,7 @@ pit_handler:
   test si, si
   jz .counted_to_zero
     ;; if counter flag is nonzero, do nothing
-    ret
+    jmp .ret
   .counted_to_zero:
     SAFE_PUTS "pit handler's own 32 tick timeout"
     mov byte [.own_counter], byte 0xff
@@ -60,7 +62,8 @@ pit_handler:
     pop r10
     pop r9
 
-    ret
+  .ret:
+  ret
 ; }}}
 
 
