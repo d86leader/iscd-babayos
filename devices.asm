@@ -72,17 +72,11 @@ setup_device_handlers:
 ;;;;; Interrupt handlers ;;;;;
 
 
-; pit_handler {{{
+; base_pit_handler {{{
 base_pit_handler:
- push rax
- push rsi
- push rdi
-
  call pit_handler
+ push rax
  end_of_interrupt 0
-
- pop rdi
- pop rsi
  pop rax
  iretq
  ; }}}
