@@ -7,7 +7,7 @@ global initialize_pit
 global pit_handler
 global page_fault_handler
 global gp_handler
-global setup_handlers
+global setup_device_handlers
 
 %include "headers/interrupts.asmh"
 %include "headers/putstr.asmh"
@@ -44,18 +44,11 @@ initialize_pit:
 ; }}}
 
 
-;; Put all handlers into idt
+;; Put device handlers into idt
 ; setup_handlers {{{
 ;; SUBROUTINE
-;; modifies rax, rcx, rdi, rsi
-setup_handlers:
-  mov rcx, 256
-  handler_set_loop:
-    mov rsi, stub_handler
-    mov rdi, rcx
-    call set_int_handler
-    loop handler_set_loop
-
+;; modifies rax, rdi, rsi
+setup_device_handlers:
   mov rsi, pit_handler
   mov rdi, 32
   call set_int_handler
@@ -78,12 +71,6 @@ setup_handlers:
 ;;;;; Interrupt handlers ;;;;;
 
 
-; stub_handler {{{
-stub_handler:
-  iretq
-; }}}
-
-
 ; pit_handler {{{
 pit_handler:
  push rax
@@ -103,6 +90,10 @@ section .text
  end_of_interrupt 0
  pop rax
  iretq
+
+ section .data
+
+ section .text
  ; }}}
 
 

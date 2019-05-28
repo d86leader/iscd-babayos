@@ -6,7 +6,7 @@ extern initialize_pit
 extern pit_handler
 extern page_fault_handler
 extern gp_handler
-extern setup_handlers
+extern setup_device_handlers
 
 
 %endif ;; DEVICES_H

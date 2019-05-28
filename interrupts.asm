@@ -5,6 +5,9 @@
 global idt_descriptor
 global set_int_handler
 global initialize_pic
+global setup_handlers
+
+%include "headers/devices.asmh"
 
 section .text
 
@@ -29,6 +32,30 @@ set_int_handler:
  mov [rdi + idt_entry.offset64], esi
 
  ret
+; }}}
+
+
+;; Put all handlers into idt
+; setup_handlers {{{
+;; SUBROUTINE
+;; modifies rax, rcx, rdi, rsi
+setup_handlers:
+  mov rcx, 256
+  handler_set_loop:
+   mov rsi, stub_handler
+   mov rdi, rcx
+   call set_int_handler
+   loop handler_set_loop
+
+ call setup_device_handlers
+
+ ret
+; }}}
+
+
+; stub_handler {{{
+stub_handler:
+  iretq
 ; }}}
 
 
