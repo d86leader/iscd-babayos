@@ -170,4 +170,5 @@ pic_unmask 1
 
 
 hang_machine:
+ hlt
  jmp hang_machine
