@@ -266,7 +266,7 @@ endstruc
 current_pid: dq 1
 
 processes:
-%rep (max_process_amount - 1)
+  ;; define init process with pid 1
   istruc process_info
     at process_info.id, dq 1
     at process_info.ss, dw 0
@@ -274,12 +274,14 @@ processes:
     at process_info.stack_page, dq 0
   iend
 
+;; reserve space for other processes
+%rep (max_process_amount - 1)
   %rep process_info.size
     db 0
   %endrep
 %endrep
 
-pid_queue: dq 1
+pid_queue: dq 1 ;; put init (pid 1) into queue
            %rep (max_process_amount - 1)
             dq 0
            %endrep
