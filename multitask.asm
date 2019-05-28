@@ -10,6 +10,9 @@ global add_counter
 %include "headers/interrupts.asmh"
 
 
+%define max_process_amount 16
+
+
 ; pit_handler {{{
 ;; MODIFIES rsi, rdi
 pit_handler:
@@ -177,8 +180,11 @@ enter_thread:
 
 
 ; thread_switcher {{{
+;; round-robin thread switcher
 thread_switcher:
-  xor rax, rax
+  call pid_queue_get_next
+;  xor rax, rax
+;  inc rax
   mov [current_pid], rax
   jmp enter_thread
 ; }}}
@@ -201,6 +207,28 @@ find_proc_struc:
 ; }}}
 
 
+; pid_queue_get_next {{{
+;; FUNCTION
+;; MODIFIES rax
+;; RETURNS: rax - nex pid in queue
+pid_queue_get_next:
+  push rsi
+  mov rsi, [pid_queue_position]
+  add rsi, 8
+  mov rax, [rsi]
+  test rax, rax
+  jnz .ret
+    ;; go to start of queue
+    mov rsi, pid_queue
+    mov rax, [rsi]
+
+  .ret:
+  mov [pid_queue_position], rsi
+  pop rsi
+  ret
+; }}}
+
+
 section .data
 
 ; pit_counter {{{
@@ -213,7 +241,7 @@ endstruc
 
 ; pit_counters {{{
 pit_counters:
-%rep 16
+%rep max_process_amount
   istruc pit_counter
     at pit_counter.count, dq 0
     at pit_counter.addr,  dq 0
@@ -235,9 +263,27 @@ endstruc
 
 
 ; processes {{{
-current_pid: dq 0
+current_pid: dq 1
+
 processes:
-%rep 16
-  resq process_info.size
+%rep (max_process_amount - 1)
+  istruc process_info
+    at process_info.id, dq 1
+    at process_info.ss, dw 0
+    at process_info.sp, dq 0
+    at process_info.stack_page, dq 0
+  iend
+
+  %rep process_info.size
+    db 0
+  %endrep
 %endrep
+
+pid_queue: dq 1
+           %rep (max_process_amount - 1)
+            dq 0
+           %endrep
+           dq 0
+.end:
+pid_queue_position: dq pid_queue
 ; }}}
