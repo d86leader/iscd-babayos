@@ -12,6 +12,7 @@ global setup_device_handlers
 %include "headers/interrupts.asmh"
 %include "headers/putstr.asmh"
 %include "headers/keyboard.asmh"
+%include "headers/multitask.asmh"
 
 
 ;; Initializes timer to send irq0 at desired rate
@@ -49,7 +50,7 @@ initialize_pit:
 ;; SUBROUTINE
 ;; modifies rax, rdi, rsi
 setup_device_handlers:
-  mov rsi, pit_handler
+  mov rsi, base_pit_handler
   mov rdi, 32
   call set_int_handler
 
@@ -72,35 +73,25 @@ setup_device_handlers:
 
 
 ; pit_handler {{{
-pit_handler:
+base_pit_handler:
  push rax
+ push rsi
+ push rdi
 
-section .data
- .pit_counter: dq 1
-
-section .text
- cmp qword [.pit_counter], qword 32
- jb .ret
-
- mov qword [.pit_counter], qword 0
- SAFE_PUTS "Itervalled out"
-
-.ret:
- inc qword [.pit_counter]
+ call pit_handler
  end_of_interrupt 0
+
+ pop rdi
+ pop rsi
  pop rax
  iretq
-
- section .data
-
- section .text
  ; }}}
 
 
 ; base_keyboard_handler {{{
 base_keyboard_handler:
- push rax
  call keyboard_handler
+ push rax
  end_of_interrupt 1
  pop rax
  iretq
