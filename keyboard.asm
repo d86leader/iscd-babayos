@@ -92,19 +92,12 @@ keyboard_handler:
  jz .return
 
  in al, PS_DATA
-
  call nr2char
  cmp al, 255
- je .unrecognized_char
+ je .return
 
-  mov [.char], al
-  mov rsi, .good_char_str
-  jmp .do_print
-
- .unrecognized_char:
-  mov rsi, .unrecognized_str
-
- .do_print:
+ mov [.char], al
+ mov rsi, .good_char_str
  call putstr_64
 
  .return:
@@ -119,10 +112,7 @@ keyboard_handler:
 
  section .data
   .good_char_str: db "pressed "
-  .char: db "#"
-  db 0
-  .unrecognized_str: db "urecognized char",0
-
+  .char: db "#", 0
  section .text
 ; }}}
 
