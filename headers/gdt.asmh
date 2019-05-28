@@ -1,4 +1,6 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef GDT_H
+%define GDT_H
 
 ;; things referring to pages and also gdt
 
@@ -13,3 +15,5 @@ struc gdt_entry
   .size:
 endstruc
 ; }}}
+
+%endif ;; GDT_H

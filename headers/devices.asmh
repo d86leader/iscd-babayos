@@ -1,7 +1,12 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef DEVICES_H
+%define DEVICES_H
 
 extern initialize_pit
 extern pit_handler
 extern page_fault_handler
 extern gp_handler
 extern setup_handlers
+
+
+%endif ;; DEVICES_H

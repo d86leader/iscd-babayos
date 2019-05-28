@@ -1,4 +1,10 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
+%ifndef KEYBOARD_H
+%define KEYBOARD_H
+
 
 extern initialize_ps2
 extern keyboard_handler
+
+
+%endif ;; KEYBOARD_H

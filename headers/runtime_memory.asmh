@@ -1,6 +1,6 @@
 ; vim: ft=nasm ts=2 sw=2 expandtab
-%ifndef ALLOC_PAGE_H
-%define ALLOC_PAGE_H
+%ifndef RUNTIME_MEMORY_H
+%define RUNTIME_MEMORY_H
 
 
 extern base_page_addr
@@ -42,4 +42,4 @@ extern base_page_addr
 %endmacro
 
 
-%endif ;; ALLOC_PAGE_H
+%endif ;; RUNTIME_MEMORY_H
