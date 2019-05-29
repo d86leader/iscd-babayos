@@ -81,10 +81,23 @@ push eax ;; pt_0
 
 call set_paging
 paging_set:
+pop ecx
+pop ecx ;; get pointer to pd_0
 mov esp, ebp
+
+;; save the first unmapped address
 and eax, 0xfffffff0
 push dword 0
 push eax
+
+;; allocate a new page for stack page descriptors
+_constexpr_alloc_page eax
+push dword 0
+push eax
+
+;; save pointer to pd_0
+push dword 0
+push ecx
 
 
 mov eax, 10100000b ;; PAE and PGE bits
@@ -127,9 +140,15 @@ mov ss, ax
 mov es, ax
 
 PUTS "Succesfully entered 64-bit long mode"
-pop rax
-push rax
-push rax
+
+pop r8 ;; pointer to pd_0
+pop r9 ;; pointer to new page
+pop r10 ;; pointer to first unmapped memory
+;; and save them again
+
+
+push r10
+push r10
 mov rbp, rsp
 PUTS "Mapped d (0xx) bytes of memory for kernel"
 add rsp, 16
