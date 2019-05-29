@@ -200,13 +200,33 @@ after_fork:
 test r15, r15
 jnz forked
 
-;; as parent
+parent:
 PUTS "Printing from parent"
-
-jmp hang_machine
+hlt
+jmp parent
 
 forked:
-PUTS "Printing from fork"
+push r15
+mov rbp, rsp
+PUTS "Printing from fork with pid d"
+add rsp, 8
+
+int 100
+test r15, r15
+jnz fork2
+
+parent2:
+PUTS "parent2"
+hlt
+jmp parent2
+
+fork2:
+push r15
+mov rbp, rsp
+PUTS "fork2, d"
+add rsp, 8
+hlt
+jmp fork2
 
 
 hang_machine:
