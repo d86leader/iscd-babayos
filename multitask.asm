@@ -174,7 +174,7 @@ enter_thread:
   call find_proc_struc
 
   mov ax, [rdi + process_info.ss],
-  mov ax, ss
+  mov ss, ax
   mov rsp, [rdi + process_info.sp]
 
   mov r8, [rdi + process_info.stack_page]
