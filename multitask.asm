@@ -269,6 +269,12 @@ ll_fork_handler:
   add rax, r9 ;; rax now should point to stack head of the copy of page, not the original
   mov [rdi + process_info.sp], rax
 
+  ;; also tweak the rsp that's held on stack of new process
+  mov rbx, [rax + (8*15) + 8 + 32 - 8] ;; regs, flags, offset from manual, - as no errcode
+  sub rbx, r8
+  add rbx, r9
+  mov [rax + (8*15) + 8 + 32 - 8], rbx
+
   add rsp, 8 ;; don't pop r15
   xor r15, r15
   pop r14
