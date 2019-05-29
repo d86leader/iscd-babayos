@@ -157,7 +157,7 @@ leave_thread_from_pit:
   push r15
 
   mov rax, [current_pid]
-  call find_proc_struc
+  call proc_struc_find
 
   mov ax, ss
   mov [rdi + process_info.ss], ax
@@ -171,7 +171,7 @@ leave_thread_from_pit:
 ;; ARGS:
 ;;    rax - pid to enter
 enter_thread:
-  call find_proc_struc
+  call proc_struc_find
 
   mov ax, [rdi + process_info.ss],
   mov ss, ax
@@ -214,12 +214,19 @@ thread_switcher:
 ; }}}
 
 
-; find_struc {{{
+; ll_fork {{{
+ll_fork:
+  pushfq
+  cli
+; }}}
+
+
+; proc_struc_find {{{
 ;; ARGS:
 ;;    rax - pid
 ;; RETURNS:
 ;;    rdi - pointer to structure
-find_proc_struc:
+proc_struc_find:
   mov rdi, processes
   .loop:
     cmp [rdi], rax
@@ -227,6 +234,49 @@ find_proc_struc:
     add rdi, process_info.size
     jmp .loop
   .ret:
+  ret
+; }}}
+
+
+; proc_struc_add {{{
+;; ARGS:
+;;    r8 - pid
+;;    r9 - stack page
+;; MODIFIES rdi, rax
+proc_struc_add:
+  mov rdi, [processes] ;; we know that anything before is already filled
+
+  .loop:
+    add rdi, process_info.size
+    mov rax, [rdi]
+    test rax, rax
+    jnz .loop
+    ;; no bound check because ehhhh
+
+  mov [rdi + process_info.id], r8
+  mov [rdi + process_info.stack_page], r9
+  ret
+; }}}
+
+
+; proc_struc_remove {{{
+;; ARGS:
+;;    r8 - pid
+;; MODIFIES rax, rdi, rsi
+proc_struc_remove:
+  mov rax, r8
+  call proc_struc_find
+
+  mov rsi, rdi
+  add rsi, process_info.size
+  .loop:
+    mov rcx, process_info.size
+    rep movsb
+
+    mov rax, [rdi + process_info.id] ;; which is id of newly copied struct
+    test rax, rax
+    jnz .loop
+
   ret
 ; }}}
 
@@ -251,6 +301,52 @@ pid_queue_get_next:
   pop rsi
   ret
 ; }}}
+
+
+; pid_queue_add {{{
+;; ARGS:
+;;    r8 - pid to add
+;; MODIFIES rdi, rax
+pid_queue_add:
+  mov rdi, [pid_queue_position] ;; we know that anything before is already filled
+
+  .loop:
+    add rdi, 8
+    mov rax, [rdi]
+    test rax, rax
+    jnz .loop
+    ;; no bound check because ehhhh
+
+  mov [rdi], r8
+  ret
+; }}}
+
+
+; pid_queue_remove {{{
+;; ARGS:
+;;    r8 - pid to remove
+;; MODIFIES rsi, rdi, rcx
+pid_queue_remove:
+  mov rdi, [pid_queue]
+  sub rdi, 8 ;; for more pretty loop
+  mov rcx, max_process_amount + 1 ;; same
+
+  .loop:
+    add rdi, 8
+    dec rcx
+    cmp [rdi], r8
+    jne .loop
+    ;; again no bounds check. As everywhere here
+
+  mov rsi, rdi
+  add rsi, 8
+  rep movsq ;; easy to prove correctness when you take proc_amount = 2
+
+  ret
+; }}}
+
+
+proc_struc_
 
 
 section .data
