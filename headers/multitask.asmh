@@ -3,6 +3,7 @@
 %define MULTITASK_H
 
 extern pit_handler
-
+extern add_counter
+extern setup_init
 
 %endif ;; MULTITASK_H

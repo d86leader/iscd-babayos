@@ -7,6 +7,7 @@
 %include "headers/runtime_memory.asmh"
 %include "headers/devices.asmh"
 %include "headers/keyboard.asmh"
+%include "headers/multitask.asmh"
 
 
 [BITS 32]
@@ -144,8 +145,6 @@ PUTS "Succesfully entered 64-bit long mode"
 pop r8 ;; pointer to pd_0
 pop r9 ;; pointer to new page
 pop r10 ;; pointer to first unmapped memory
-;; and save them again
-
 
 push r10
 push r10
@@ -156,6 +155,9 @@ add rsp, 16
 call set_stack_pages
 mov rsp, rax
 PUTS "Switched to a new stack"
+
+mov r8, r10
+call setup_init
 
 
 ;; Load interrupt routines to idt

@@ -5,12 +5,29 @@
 
 global pit_handler
 global add_counter
+global setup_init
 
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
 
 
 %define max_process_amount 16
+
+
+;; Set appropriate values to the process structure of init
+; setup_init {{{
+;; ARGS
+;;    r8 - stack page address
+setup_init:
+  ;; add init to queue
+  mov qword [pid_queue], qword 1
+
+  ;; add process structure
+  mov qword [processes + process_info.id], qword 1
+  mov [processes + process_info.stack_page], r8
+
+  ret
+; }}}
 
 
 ; pit_handler {{{
@@ -266,23 +283,15 @@ endstruc
 current_pid: dq 1
 
 processes:
-  ;; define init process with pid 1
-  istruc process_info
-    at process_info.id, dq 1
-    at process_info.ss, dw 0
-    at process_info.sp, dq 0
-    at process_info.stack_page, dq 0
-  iend
-
 ;; reserve space for other processes
-%rep (max_process_amount - 1)
+%rep max_process_amount
   %rep process_info.size
     db 0
   %endrep
 %endrep
 
-pid_queue: dq 1 ;; put init (pid 1) into queue
-           %rep (max_process_amount - 1)
+pid_queue:
+           %rep max_process_amount
             dq 0
            %endrep
            dq 0
