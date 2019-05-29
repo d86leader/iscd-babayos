@@ -192,6 +192,21 @@ PUTS "Keyaboard set up successfully"
 pic_unmask 1
 
 
+;; fork
+int 100
+
+after_fork:
+
+test r15, r15
+jnz forked
+
+;; as parent
+PUTS "Printing from parent"
+
+jmp hang_machine
+
+forked:
+PUTS "Printing from fork"
 
 
 hang_machine:

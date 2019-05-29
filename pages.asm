@@ -159,6 +159,7 @@ set_stack_pages:
   mov [stack_space_addr], r10
 
   ;; zero out an empty page table
+  xor rax, rax
   mov rdi, r9
   mov ecx, (4096 / 8)
   rep stosq
@@ -174,6 +175,14 @@ set_stack_pages:
   add rdi, 8
   or rax, 11b ;; present | write
   mov [rdi], rax
+
+  ;; FIXME remove this
+  add rdi, 8
+  mov qword [0x4010], qword 0x200003
+  add rdi, 8
+  mov qword [0x4018], qword 0x201003
+  ;; now i can watch both stacks from debugger
+  ;; at 0x202000 and 0x203000
 
   mov rax, r10
   add rax, (4096 - 8)

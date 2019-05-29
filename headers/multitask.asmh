@@ -5,5 +5,7 @@
 extern pit_handler
 extern add_counter
 extern setup_init
+extern ll_fork_handler
+extern ll_kill
 
 %endif ;; MULTITASK_H

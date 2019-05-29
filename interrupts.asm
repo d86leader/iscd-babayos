@@ -8,6 +8,7 @@ global initialize_pic
 global setup_handlers
 
 %include "headers/devices.asmh"
+%include "headers/multitask.asmh"
 
 section .text
 
@@ -49,6 +50,10 @@ setup_handlers:
 
  call setup_device_handlers
 
+ mov rsi, fork_handler
+ mov rdi, 100
+ call set_int_handler
+
  ret
 ; }}}
 
@@ -56,6 +61,12 @@ setup_handlers:
 ; stub_handler {{{
 stub_handler:
   iretq
+; }}}
+
+
+; fork_handler {{{
+fork_handler:
+  jmp ll_fork_handler
 ; }}}
 
 

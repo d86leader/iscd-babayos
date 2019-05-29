@@ -6,6 +6,8 @@
 global pit_handler
 global add_counter
 global setup_init
+global ll_fork_handler
+global ll_kill
 
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
@@ -26,6 +28,10 @@ setup_init:
   ;; add process structure
   mov qword [processes + process_info.id], qword 1
   mov [processes + process_info.stack_page], r8
+
+  ;; make 1 the current and latest pid
+  mov qword [current_pid], qword 1
+  mov qword [last_pid], qword 1
 
   ret
 ; }}}
@@ -87,10 +93,6 @@ pit_handler:
     jmp .leave_thread
 
   .ret:
-  pop rdi
-  pop rsi
-  ret
-
   .leave_thread:
   pop rdi
   pop rsi
@@ -183,6 +185,12 @@ enter_thread:
 
  .finalize:
 
+  ;; possibly a bug?
+  ;; display/x *(long*)($rsp + 0x2000)
+  ;; display/x *(long*)($rsp + 0x3000)
+  ;; display/x *(long*)$rsp
+  ;; b *0x8693
+  ;; b *0x8698
   pop r15
   pop r14
   pop r13
@@ -207,17 +215,78 @@ enter_thread:
 ;; round-robin thread switcher
 thread_switcher:
   call pid_queue_get_next
-;  xor rax, rax
-;  inc rax
   mov [current_pid], rax
   jmp enter_thread
 ; }}}
 
 
-; ll_fork {{{
-ll_fork:
+; ll_fork_handler {{{
+;; this function is jumped into when an interrupt occurs
+;; MODIFIES: r15
+;; RETURNS r15 - 0 or new pid
+ll_fork_handler:
+  ;; the new process created should have such a stack layout that enter_thread
+  ;; would work correctly. That means we have to enter via interrupt and push
+  ;; all registers
   pushfq
   cli
+  push rax
+  push rbx
+  push rcx
+  push rdx
+  push rsi
+  push rdi
+  push rbp
+  push r8
+  push r9
+  push r10
+  push r11
+  push r12
+  push r13
+  push r14
+  ;; don't push r15 yet
+
+  mov r8, [last_pid]
+  inc r8
+  mov [last_pid], r8
+  call pid_queue_add
+  push r8 ;; push into place of r15 - new pid
+
+  call create_stack_page
+  mov r9, rax ;; address of new page
+
+  call proc_struc_add
+  mov [rdi + process_info.id], r8
+  mov [rdi + process_info.stack_page], r9
+  mov ax, ss
+  mov [rdi + process_info.ss], ax
+  mov [rdi + process_info.sp], rsp
+
+  add rsp, 8 ;; don't pop r15
+  xor r15, r15
+  pop r14
+  pop r13
+  pop r12
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rbp
+  pop rdi
+  pop rsi
+  pop rdx
+  pop rcx
+  pop rbx
+  add rsp, 8 ;; don't pop rax
+
+  popfq
+  iretq
+; }}}
+
+
+; ll_kill {{{
+ll_kill:
+  nop
 ; }}}
 
 
@@ -239,12 +308,11 @@ proc_struc_find:
 
 
 ; proc_struc_add {{{
-;; ARGS:
-;;    r8 - pid
-;;    r9 - stack page
+;; ARGS: none
 ;; MODIFIES rdi, rax
+;; RETURNS rdi - address of process struct added
 proc_struc_add:
-  mov rdi, [processes] ;; we know that anything before is already filled
+  mov rdi, processes ;; we know that anything before is already filled
 
   .loop:
     add rdi, process_info.size
@@ -252,9 +320,6 @@ proc_struc_add:
     test rax, rax
     jnz .loop
     ;; no bound check because ehhhh
-
-  mov [rdi + process_info.id], r8
-  mov [rdi + process_info.stack_page], r9
   ret
 ; }}}
 
@@ -327,7 +392,7 @@ pid_queue_add:
 ;;    r8 - pid to remove
 ;; MODIFIES rsi, rdi, rcx
 pid_queue_remove:
-  mov rdi, [pid_queue]
+  mov rdi, pid_queue
   sub rdi, 8 ;; for more pretty loop
   mov rcx, max_process_amount + 1 ;; same
 
@@ -344,9 +409,6 @@ pid_queue_remove:
 
   ret
 ; }}}
-
-
-proc_struc_
 
 
 section .data
@@ -375,6 +437,7 @@ pit_counters:
 struc process_info
   .id: resq 1
   .ss: resw 1
+  .zero: resw 3 ;; 4 words = qword
   .sp: resq 1
   .stack_page: resq 1
   .size:
@@ -383,7 +446,8 @@ endstruc
 
 
 ; processes {{{
-current_pid: dq 1
+current_pid: dq 0
+last_pid: dq 0
 
 processes:
 ;; reserve space for other processes
