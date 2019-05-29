@@ -179,9 +179,9 @@ enter_thread:
   mov ss, ax
   mov rsp, [rdi + process_info.sp]
 
-  mov r8, [rdi + process_info.stack_page]
-  mov rax, .finalize
-  jmp change_stack_page
+;  mov r8, [rdi + process_info.stack_page]
+;  mov rax, .finalize
+;  jmp change_stack_page
 
  .finalize:
 
@@ -250,17 +250,24 @@ ll_fork_handler:
   inc r8
   mov [last_pid], r8
   call pid_queue_add
-  push r8 ;; push into place of r15 - new pid
+  mov r15, r8
+  push r15 ;; push a new pid instead of what was in it
 
+  mov rax, [current_pid]
+  call proc_struc_find
+  mov r8, [rdi + process_info.stack_page]
   call create_stack_page
   mov r9, rax ;; address of new page
 
   call proc_struc_add
-  mov [rdi + process_info.id], r8
+  mov [rdi + process_info.id], r15
   mov [rdi + process_info.stack_page], r9
   mov ax, ss
   mov [rdi + process_info.ss], ax
-  mov [rdi + process_info.sp], rsp
+  mov rax, rsp
+  sub rax, r8
+  add rax, r9 ;; rax now should point to stack head of the copy of page, not the original
+  mov [rdi + process_info.sp], rax
 
   add rsp, 8 ;; don't pop r15
   xor r15, r15

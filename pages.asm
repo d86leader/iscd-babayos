@@ -142,7 +142,7 @@ ret
 section .data
 stack_page_table: dq 0
 last_page_addr: dq 0
-stack_space_addr: dq 0
+last_mapping_addr: dq 0 ;; address in page table where I last mapped a stack page
 
 section .text
 
@@ -155,8 +155,8 @@ section .text
 ;; RETURNS rax - a place to put the stack tip onto
 set_stack_pages:
   mov [stack_page_table], r9
+  mov [last_mapping_addr], r9
   mov [last_page_addr], r10
-  mov [stack_space_addr], r10
 
   ;; zero out an empty page table
   xor rax, rax
@@ -193,7 +193,7 @@ set_stack_pages:
 
 ;; create a copy of current page
 ; create_stack_page {{{
-;; ARGS none
+;; ARGS r8 - current page address
 ;; MODIFIES: rax, rcx, rsi, rdi
 ;; RETURNS
 ;;    rax - address of new page
@@ -205,22 +205,16 @@ create_stack_page:
   mov rax, rsi ;; save addr to return
   ;; and create a mapping for it
   or rsi, 11b ;; present | write
-  mov rdi, [stack_page_table]
+  mov rdi, [last_mapping_addr]
   add rdi, 8
+  mov [last_mapping_addr], rdi
   mov [rdi], rsi
 
   ;; copy current page to newly mapped one
-  mov rsi, [stack_space_addr]
-  mov rdi, rsi
-  add rdi, 4096
+  mov rsi, r8
+  mov rdi, rax
   mov rcx, (4096 / 8)
   rep movsq
-
-  ;; clear the mapping
-  xor rsi, rsi
-  mov rdi, [stack_page_table]
-  add rdi, 8
-  mov [rdi], rsi
 
   ret
 ; }}}
