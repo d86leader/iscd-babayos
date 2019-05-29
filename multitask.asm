@@ -9,6 +9,7 @@ global setup_init
 
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
+%include "headers/pages.asmh"
 
 
 %define max_process_amount 16
@@ -175,6 +176,12 @@ enter_thread:
   mov ax, [rdi + process_info.ss],
   mov ax, ss
   mov rsp, [rdi + process_info.sp]
+
+  mov r8, [rdi + process_info.stack_page]
+  mov rax, .finalize
+  jmp change_stack_page
+
+ .finalize:
 
   pop r15
   pop r14
