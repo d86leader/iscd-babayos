@@ -6,6 +6,8 @@ global set_paging
 global set_gdt
 global gdt_descriptor
 global set_stack_pages
+global create_stack_page
+global change_stack_page
 
 section .text
 
@@ -136,6 +138,14 @@ ret
 ;; ----- Setup pages for multitasking stack ----- ;;
 [BITS 64]
 
+
+section .data
+stack_page_table: dq 0
+last_page_addr: dq 0
+stack_space_addr: dq 0
+
+section .text
+
 ; set_stack_pages {{{
 ;; ARGS
 ;;    r8 - pointer to page directory
@@ -144,9 +154,13 @@ ret
 ;; MODIFIES: rdi, rax
 ;; RETURNS rax - a place to put the stack tip onto
 set_stack_pages:
+  mov [stack_page_table], r9
+  mov [last_page_addr], r10
+  mov [stack_space_addr], r10
+
   ;; zero out an empty page table
   mov rdi, r9
-  mov ecx, 512
+  mov ecx, (4096 / 8)
   rep stosq
 
   ;; put a mapping to the region into table
@@ -165,4 +179,52 @@ set_stack_pages:
   add rax, (4096 - 8)
 
   ret
+; }}}
+
+
+;; create a copy of current page
+; create_stack_page {{{
+;; ARGS none
+;; MODIFIES: rax, rcx, rsi, rdi
+;; RETURNS
+;;    rax - address of new page
+create_stack_page:
+  ;; allocate a page
+  mov rsi, [last_page_addr]
+  add rsi, 4096
+  mov [last_page_addr], rsi
+  mov rax, rsi ;; save addr to return
+  ;; and create a mapping for it
+  or rsi, 11b ;; present | write
+  mov rdi, [stack_page_table]
+  add rdi, 8
+  mov [rdi], rsi
+
+  ;; copy current page to newly mapped one
+  mov rsi, [stack_space_addr]
+  mov rdi, rsi
+  add rdi, 4096
+  mov rcx, (4096 / 8)
+  rep movsq
+
+  ;; clear the mapping
+  xor rsi, rsi
+  mov rdi, [stack_page_table]
+  add rdi, 8
+  mov [rdi], rsi
+
+  ret
+; }}}
+
+
+; change_stack_page {{{
+;; ARGS
+;;    r8 - what address to put
+;;    rax - where to return
+;; MODIFIES: rdi, r8
+change_stack_page:
+  mov rdi, [stack_page_table]
+  or r8, 11b ;; write | present
+  mov [rdi], r8
+  jmp rax
 ; }}}

@@ -6,5 +6,7 @@ extern set_paging
 extern set_gdt
 extern gdt_descriptor
 extern set_stack_pages
+extern create_stack_page
+extern change_stack_page
 
 %endif ;; PAGES_H
