@@ -5,6 +5,7 @@
 global set_paging
 global set_gdt
 global gdt_descriptor
+global set_stack_pages
 
 section .text
 
@@ -101,6 +102,8 @@ resd 1
 %include "headers/gdt.asmh"
 
 section .text
+; set_gdt {{{
+;; MODIFIES edi, eax
 set_gdt:
 
 
@@ -127,3 +130,39 @@ mov [edi+6], al
 
 ;; gdt modified, return
 ret
+; }}}
+
+
+;; ----- Setup pages for multitasking stack ----- ;;
+[BITS 64]
+
+; set_stack_pages {{{
+;; ARGS
+;;    r8 - pointer to page directory
+;;    r9 - pointer to empty page table
+;;    r10 - pointer to an unmapped region
+;; MODIFIES: rdi, rax
+;; RETURNS rax - a place to put the stack tip onto
+set_stack_pages:
+  ;; zero out an empty page table
+  mov rdi, r9
+  mov ecx, 512
+  rep stosq
+
+  ;; put a mapping to the region into table
+  mov rax, r10
+  or rax, 11b ;; present | write
+  mov [r9], rax
+
+  ;; put a mapping to table into directory
+  mov rax, r9
+  mov rdi, r8
+  add rdi, 8
+  or rax, 11b ;; present | write
+  mov [rdi], rax
+
+  mov rax, r10
+  add rax, (4096 - 8)
+
+  ret
+; }}}

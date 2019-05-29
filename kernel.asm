@@ -153,6 +153,10 @@ mov rbp, rsp
 PUTS "Mapped d (0xx) bytes of memory for kernel"
 add rsp, 16
 
+call set_stack_pages
+mov rsp, rax
+PUTS "Switched to a new stack"
+
 
 ;; Load interrupt routines to idt
 
