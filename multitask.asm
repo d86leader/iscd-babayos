@@ -277,7 +277,7 @@ ll_fork_handler:
   pop rdx
   pop rcx
   pop rbx
-  add rsp, 8 ;; don't pop rax
+  pop rax
 
   popfq
   iretq
