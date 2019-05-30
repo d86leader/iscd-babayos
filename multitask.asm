@@ -71,10 +71,8 @@ pit_handler:
   section .text
   mov si, [.own_counter]
   test si, si
-  jz .counted_to_zero
-    ;; if counter flag is nonzero, do nothing
-    jmp .ret
-  .counted_to_zero:
+  jnz .counter_not_zero ;; if counter flag is nonzero, do nothing
+    ;; when counted to zero:
     SAFE_PUTS "pit handler's own 32 tick timeout"
     mov byte [.own_counter], byte 0xff
     ;; start new countdown
@@ -89,11 +87,10 @@ pit_handler:
     pop rax
     pop r10
     pop r9
+  .counter_not_zero:
 
-    jmp .leave_thread
+  ;; leave current thread
 
-  .ret:
-  .leave_thread:
   pop rdi
   pop rsi
   add rsp, 8 ;; account for own return address
@@ -290,7 +287,7 @@ ll_fork_handler:
   pop rdx
   pop rcx
   pop rbx
-  add rsp, 8 ;; don't pop rax
+  pop rax
 
   popfq
   iretq
