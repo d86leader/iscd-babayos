@@ -206,11 +206,6 @@ hlt
 jmp parent
 
 forked:
-push r15
-mov rbp, rsp
-PUTS "Printing from fork with pid d"
-add rsp, 8
-
 int 100
 test r15, r15
 jnz fork2
@@ -223,7 +218,7 @@ jmp parent2
 fork2:
 push r15
 mov rbp, rsp
-PUTS "fork2, d"
+PUTS "fork2, d, hahahahaahahahahahahahahahah"
 add rsp, 8
 hlt
 jmp fork2
