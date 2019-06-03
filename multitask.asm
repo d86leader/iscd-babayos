@@ -333,7 +333,7 @@ proc_struc_find:
   .loop:
     ;; check bounds
     cmp rcx, max_process_amount
-    jge .out_of_bound
+    jg .out_of_bound
     inc rcx
 
     cmp [rdi], rax
@@ -461,8 +461,8 @@ pid_queue_remove:
     add rdi, 8
     dec rcx
     ;; bounds check
-    test rcx, rcx
-    jz .out_of_bound
+    cmp rcx, 0
+    jl .out_of_bound
 
     cmp [rdi], r8
     jne .loop
@@ -518,7 +518,7 @@ last_pid: dq 0
 
 processes:
 ;; reserve space for other processes
-%rep max_process_amount
+%rep max_process_amount + 1
   %rep process_info.size
     db 0
   %endrep
