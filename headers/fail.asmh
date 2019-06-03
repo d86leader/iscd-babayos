@@ -10,11 +10,13 @@ extern putstr
 %macro fail_with 1
   section .text
 
-  PUTS %%fail_message
+  mov rsi, %%fail_message
+  call putstr_64
 
   %%hang_ptr:
     jmp %%hang_ptr
 
+  section .data
   %%fail_message:
     db  15, 0x02
     db  "In file ", __FILE__, " on line ", FAIL_H_to_string(__LINE__), 10
@@ -22,6 +24,8 @@ extern putstr
 ;    db  " built as ", __OUTPUT_FORMAT__
     db  " on ", __UTC_DATE__, " ", __UTC_TIME__, 10
     db  15, 0x03, %1, 0
+
+  section .text
 %endmacro
 
 %macro fail 0
