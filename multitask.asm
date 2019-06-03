@@ -296,7 +296,10 @@ ll_fork_handler:
 
 ; ll_kill {{{
 ll_kill:
-  nop
+  mov r8, [current_pid]
+  call proc_struc_remove
+  call pid_queue_remove
+  jmp thread_switcher
 ; }}}
 
 

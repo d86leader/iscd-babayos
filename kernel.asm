@@ -202,8 +202,7 @@ jnz forked
 
 parent:
 PUTS "Printing from parent"
-hlt
-jmp parent
+jmp hang_machine
 
 forked:
 int 100
@@ -212,16 +211,14 @@ jnz fork2
 
 parent2:
 PUTS "parent2"
-hlt
-jmp parent2
+int 101
 
 fork2:
 push r15
 mov rbp, rsp
 PUTS "fork2, d, hahahahaahahahahahahahahahah"
 add rsp, 8
-hlt
-jmp fork2
+int 101
 
 
 hang_machine:

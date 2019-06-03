@@ -54,6 +54,10 @@ setup_handlers:
  mov rdi, 100
  call set_int_handler
 
+ mov rsi, kill_handler
+ mov rdi, 101
+ call set_int_handler
+
  ret
 ; }}}
 
@@ -67,6 +71,12 @@ stub_handler:
 ; fork_handler {{{
 fork_handler:
   jmp ll_fork_handler
+; }}}
+
+
+; kill_handler {{{
+kill_handler:
+  jmp ll_kill
 ; }}}
 
 
