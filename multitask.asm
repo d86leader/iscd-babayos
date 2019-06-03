@@ -12,6 +12,7 @@ global ll_kill
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
 %include "headers/pages.asmh"
+%include "headers/fail.asmh"
 
 
 %define max_process_amount 16
@@ -247,6 +248,10 @@ ll_fork_handler:
   inc r8
   mov [last_pid], r8
   call pid_queue_add
+  ;; check if no space left
+  test rax, rax
+  jz .not_added
+
   mov r15, r8
   push r15 ;; push a new pid instead of what was in it
 
@@ -257,6 +262,11 @@ ll_fork_handler:
   mov r9, rax ;; address of new page
 
   call proc_struc_add
+  ;; check if no space left
+  test rax, rax
+  jz .not_added
+
+  mov rdi, rax ;; address of new struc returned from function above
   mov [rdi + process_info.id], r15
   mov [rdi + process_info.stack_page], r9
   mov ax, ss
@@ -271,9 +281,17 @@ ll_fork_handler:
   sub rbx, r8
   add rbx, r9
   mov [rax + (8*15) + 8 + 32 - 8], rbx
+  jmp .return_to_caller
 
+ .not_added:
+  add rsp, 8
+  mov r15, -1
+  jmp .failed_return
+
+ .return_to_caller:
   add rsp, 8 ;; don't pop r15
   xor r15, r15
+ .failed_return:
   pop r14
   pop r13
   pop r12
@@ -306,41 +324,61 @@ ll_kill:
 ; proc_struc_find {{{
 ;; ARGS:
 ;;    rax - pid
+;; MODIFIES rcx
 ;; RETURNS:
 ;;    rdi - pointer to structure
 proc_struc_find:
   mov rdi, processes
+  xor rcx, rcx
   .loop:
+    ;; check bounds
+    cmp rcx, max_process_amount
+    jge .out_of_bound
+    inc rcx
+
     cmp [rdi], rax
     je .ret
     add rdi, process_info.size
     jmp .loop
   .ret:
   ret
+
+  .out_of_bound:
+    fail_with "Kernel panic: trying to enter process that does not exist"
 ; }}}
 
 
 ; proc_struc_add {{{
 ;; ARGS: none
-;; MODIFIES rdi, rax
+;; MODIFIES rdi, rax, rcx
 ;; RETURNS rdi - address of process struct added
 proc_struc_add:
   mov rdi, processes ;; we know that anything before is already filled
+  xor rcx, rcx
 
   .loop:
+    ;; check bounds
+    cmp rcx, max_process_amount
+    jge .out_of_bound
+    inc rcx
+
     add rdi, process_info.size
     mov rax, [rdi]
     test rax, rax
     jnz .loop
-    ;; no bound check because ehhhh
+  mov rax, rdi
   ret
+
+  .out_of_bound:
+    xor rax, rax
+    ret
 ; }}}
 
 
 ; proc_struc_remove {{{
 ;; ARGS:
 ;;    r8 - pid
-;; MODIFIES rax, rdi, rsi
+;; MODIFIES rax, rcx, rdi, rsi
 proc_struc_remove:
   mov rax, r8
   call proc_struc_find
@@ -384,19 +422,29 @@ pid_queue_get_next:
 ; pid_queue_add {{{
 ;; ARGS:
 ;;    r8 - pid to add
-;; MODIFIES rdi, rax
+;; MODIFIES rdi, rax, rcx
 pid_queue_add:
   mov rdi, [pid_queue_position] ;; we know that anything before is already filled
+  xor rcx, rcx
 
   .loop:
+    ;; check bounds
+    cmp rcx, max_process_amount
+    jge .out_of_bound
+    inc rcx
+
     add rdi, 8
     mov rax, [rdi]
     test rax, rax
     jnz .loop
-    ;; no bound check because ehhhh
 
   mov [rdi], r8
+  inc rax ;; rax was zero, so inc it and get 1
   ret
+
+  .out_of_bound:
+    xor rax, rax
+    ret
 ; }}}
 
 
@@ -412,15 +460,21 @@ pid_queue_remove:
   .loop:
     add rdi, 8
     dec rcx
+    ;; bounds check
+    test rcx, rcx
+    jz .out_of_bound
+
     cmp [rdi], r8
     jne .loop
-    ;; again no bounds check. As everywhere here
 
   mov rsi, rdi
   add rsi, 8
   rep movsq ;; easy to prove correctness when you take proc_amount = 2
 
   ret
+
+  .out_of_bound:
+    fail_with "Kernel panic: attempting to delete non-existant process"
 ; }}}
 
 
@@ -471,10 +525,10 @@ processes:
 %endrep
 
 pid_queue:
-           %rep max_process_amount
-            dq 0
-           %endrep
-           dq 0
+  %rep max_process_amount
+   dq 0
+  %endrep
+  dq 0
 .end:
 pid_queue_position: dq pid_queue
 ; }}}
