@@ -206,7 +206,20 @@ PUTS "Printing from parent"
 jmp hang_machine
 
 forked:
-PUTS "Printing from fork"
+int 100
+test r15, r15
+jnz fork2
+
+parent2:
+PUTS "parent2"
+int 101
+
+fork2:
+push r15
+mov rbp, rsp
+PUTS "fork2, d, hahahahaahahahahahahahahahah"
+add rsp, 8
+int 101
 
 
 hang_machine:
