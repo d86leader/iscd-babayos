@@ -253,12 +253,18 @@ ll_fork_handler:
   inc r8
   mov [last_pid], r8
   call pid_queue_add
+  test rax, rax
+  jz .no_fork
+
   push r8 ;; push into place of r15 - new pid
 
   call create_stack_page
   mov r9, rax ;; address of new page
 
   call proc_struc_add
+  test rax, rax
+  jz .no_fork
+
   mov rdi, rax
   mov [rdi + process_info.id], r8
   mov [rdi + process_info.stack_page], r9
@@ -268,6 +274,7 @@ ll_fork_handler:
 
   add rsp, 8 ;; don't pop r15
   xor r15, r15
+ .common_ret:
   pop r14
   pop r13
   pop r12
@@ -285,6 +292,11 @@ ll_fork_handler:
 
   popfq
   iretq
+
+  .no_fork:
+    add rsp, 8
+    mov r15, -1
+    jmp .common_ret
 ; }}}
 
 
@@ -392,7 +404,7 @@ pid_queue_get_next:
 ;; ARGS:
 ;;    r8 - pid to add
 ;; MODIFIES rdi, rax
-;; RETURNS rax - 0 if all ok, nonzero if error
+;; RETURNS rax - 0 if error, any nonzero if ok
 pid_queue_add:
   mov rdi, [last_queue_pos]
   cmp rdi, pid_queue.end
@@ -403,11 +415,11 @@ pid_queue_add:
   mov [last_queue_pos], rdi
 
   xor rax, rax
+  inc rax
   ret
 
   .no_space:
     xor rax, rax
-    not rax
     ret
 ; }}}
 
