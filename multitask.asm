@@ -260,6 +260,7 @@ ll_fork_handler:
   mov r9, rax ;; address of new page
 
   call proc_struc_add
+  mov rdi, rax
   mov [rdi + process_info.id], r15 ;; new pid is still kept here
   mov [rdi + process_info.stack_page], r9
   mov ax, ss
