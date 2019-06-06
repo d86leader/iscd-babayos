@@ -12,6 +12,7 @@ global ll_kill
 %include "headers/putstr.asmh"
 %include "headers/interrupts.asmh"
 %include "headers/pages.asmh"
+%include "headers/fail.asmh"
 
 
 %define max_process_amount 16
@@ -24,10 +25,12 @@ global ll_kill
 setup_init:
   ;; add init to queue
   mov qword [pid_queue], qword 1
+  add qword [last_queue_pos], qword 8
 
   ;; add process structure
   mov qword [processes + process_info.id], qword 1
   mov [processes + process_info.stack_page], r8
+  add qword [last_proc_pos], qword process_info.size
 
   ;; make 1 the current and latest pid
   mov qword [current_pid], qword 1
@@ -257,7 +260,7 @@ ll_fork_handler:
   mov r9, rax ;; address of new page
 
   call proc_struc_add
-  mov [rdi + process_info.id], r15
+  mov [rdi + process_info.id], r8
   mov [rdi + process_info.stack_page], r9
   mov ax, ss
   mov [rdi + process_info.ss], ax
@@ -323,17 +326,22 @@ proc_struc_find:
 ; proc_struc_add {{{
 ;; ARGS: none
 ;; MODIFIES rdi, rax
-;; RETURNS rdi - address of process struct added
+;; RETURNS rax - address of process struct added or zero if no space left
 proc_struc_add:
-  mov rdi, processes ;; we know that anything before is already filled
+  mov rdi, [last_proc_pos]
+  ;; test bounds
+  cmp rdi, processes.end
+  jge .no_space
 
-  .loop:
-    add rdi, process_info.size
-    mov rax, [rdi]
-    test rax, rax
-    jnz .loop
-    ;; no bound check because ehhhh
+  mov rax, rdi ;; return value
+
+  add rdi, process_info.size
+  mov [last_proc_pos], rdi
   ret
+
+  .no_space:
+    xor rax, rax
+    ret
 ; }}}
 
 
@@ -342,6 +350,10 @@ proc_struc_add:
 ;;    r8 - pid
 ;; MODIFIES rax, rdi, rsi
 proc_struc_remove:
+  mov rax, [last_proc_pos]
+  cmp rax, processes
+  jle .empty_list
+
   mov rax, r8
   call proc_struc_find
 
@@ -355,7 +367,11 @@ proc_struc_remove:
     test rax, rax
     jnz .loop
 
+  sub qword [last_proc_pos], qword process_info.size
   ret
+
+  .empty_list:
+    fail_with "Attempting to delete a proc struc when none exist"
 ; }}}
 
 
@@ -385,18 +401,23 @@ pid_queue_get_next:
 ;; ARGS:
 ;;    r8 - pid to add
 ;; MODIFIES rdi, rax
+;; RETURNS rax - 0 if all ok, nonzero if error
 pid_queue_add:
-  mov rdi, [pid_queue_position] ;; we know that anything before is already filled
+  mov rdi, [last_queue_pos]
+  cmp rdi, pid_queue.end
+  jge .no_space
 
-  .loop:
-    add rdi, 8
-    mov rax, [rdi]
-    test rax, rax
-    jnz .loop
-    ;; no bound check because ehhhh
+  mov [rdi], r8 ;; put pid supplied into first free space
+  add rdi, 8
+  mov [last_queue_pos], rdi
 
-  mov [rdi], r8
+  xor rax, rax
   ret
+
+  .no_space:
+    xor rax, rax
+    not rax
+    ret
 ; }}}
 
 
@@ -405,6 +426,10 @@ pid_queue_add:
 ;;    r8 - pid to remove
 ;; MODIFIES rsi, rdi, rcx
 pid_queue_remove:
+  mov rax, [last_queue_pos]
+  cmp rax, pid_queue
+  jle .empty_queue
+
   mov rdi, pid_queue
   sub rdi, 8 ;; for more pretty loop
   mov rcx, max_process_amount + 1 ;; same
@@ -420,7 +445,11 @@ pid_queue_remove:
   add rsi, 8
   rep movsq ;; easy to prove correctness when you take proc_amount = 2
 
+  sub qword [last_queue_pos], qword 8
   ret
+
+  .empty_queue:
+    fail_with "Attempting to delete from empty process queue"
 ; }}}
 
 
@@ -459,8 +488,13 @@ endstruc
 
 
 ; processes {{{
+align 8
 current_pid: dq 0
 last_pid: dq 0
+
+;; positions for quick adding and bound checking
+last_proc_pos: dq processes
+last_queue_pos: dq pid_queue
 
 processes:
 ;; reserve space for other processes
@@ -469,12 +503,12 @@ processes:
     db 0
   %endrep
 %endrep
+.end: dq 0 ;; rezerve a zero id
 
 pid_queue:
-           %rep max_process_amount
-            dq 0
-           %endrep
-           dq 0
-.end:
+%rep max_process_amount
+ dq 0
+%endrep
+.end: dq 0 ;; rezerve zero for checking
 pid_queue_position: dq pid_queue
 ; }}}
