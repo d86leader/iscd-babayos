@@ -334,8 +334,15 @@ proc_struc_find:
   .loop:
     cmp [rax + process_info.id], r8
     je .ret
+
     add rax, process_info.size
-    jmp .loop
+    ;; bounds check
+    cmp rax, [last_proc_pos]
+    jl .loop
+
+      ;; bounds check failed, struc not found
+      fail_with "Failed to find a struc for pid"
+
   .ret:
   ret
 ; }}}
@@ -446,7 +453,7 @@ pid_queue_add:
 pid_queue_remove:
   mov rax, [last_queue_pos]
   cmp rax, pid_queue
-  jle .empty_queue
+  jle .not_found
 
   mov rdi, pid_queue
   sub rdi, 8 ;; for more pretty loop
@@ -455,6 +462,11 @@ pid_queue_remove:
   .loop:
     add rdi, 8
     dec rcx
+
+    ;; bounds check
+    test rcx, rcx
+    jz .not_found
+
     cmp [rdi], r8
     jne .loop
     ;; again no bounds check. As everywhere here
@@ -466,8 +478,8 @@ pid_queue_remove:
   sub qword [last_queue_pos], qword 8
   ret
 
-  .empty_queue:
-    fail_with "Attempting to delete from empty process queue"
+  .not_found:
+    fail_with "Attempting to delete a pid which does not exist"
 ; }}}
 
 
