@@ -256,6 +256,7 @@ ll_fork_handler:
   mov r9, rax ;; address of new page
 
   call proc_struc_add
+  mov rdi, rax
   mov [rdi + process_info.id], r8
   mov [rdi + process_info.stack_page], r9
   mov ax, ss
@@ -313,7 +314,7 @@ proc_struc_find:
 ; proc_struc_add {{{
 ;; ARGS: none
 ;; MODIFIES rdi, rax
-;; RETURNS rdi - address of process struct added
+;; RETURNS rax - address of process struct added or zero if no space left
 proc_struc_add:
   mov rdi, processes ;; we know that anything before is already filled
 
@@ -322,7 +323,8 @@ proc_struc_add:
     mov rax, [rdi]
     test rax, rax
     jnz .loop
-    ;; no bound check because ehhhh
+    ;; no bound check because proc_size comparing above ensures there is space
+  mov rax, rdi
   ret
 ; }}}
 
