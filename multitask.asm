@@ -158,9 +158,10 @@ leave_thread_from_pit:
   push r14
   push r15
 
-  mov rax, [current_pid]
+  mov r8, [current_pid]
   call proc_struc_find
 
+  mov rdi, rax
   mov ax, ss
   mov [rdi + process_info.ss], ax
   mov [rdi + process_info.sp], rsp
@@ -171,10 +172,11 @@ leave_thread_from_pit:
 
 ; enter_thread {{{
 ;; ARGS:
-;;    rax - pid to enter
+;;    r8 - pid to enter
 enter_thread:
   call proc_struc_find
 
+  mov rdi, rax
   mov ax, [rdi + process_info.ss],
   mov ss, ax
   mov rsp, [rdi + process_info.sp]
@@ -216,6 +218,7 @@ enter_thread:
 thread_switcher:
   call pid_queue_get_next
   mov [current_pid], rax
+  mov r8, rax
   jmp enter_thread
 ; }}}
 
@@ -256,9 +259,11 @@ ll_fork_handler:
   mov r15, r8
   push r15 ;; push a new pid instead of what was in it
 
-  mov rax, [current_pid]
+  ;; get stack page of current proc
+  mov r8, [current_pid]
   call proc_struc_find
-  mov r8, [rdi + process_info.stack_page]
+  ;; and create a new page with it
+  mov r8, [rax + process_info.stack_page]
   call create_stack_page
   mov r9, rax ;; address of new page
 
@@ -321,15 +326,15 @@ ll_kill:
 
 ; proc_struc_find {{{
 ;; ARGS:
-;;    rax - pid
+;;    r8 - pid
 ;; RETURNS:
-;;    rdi - pointer to structure
+;;    rax - pointer to structure
 proc_struc_find:
-  mov rdi, processes
+  mov rax, processes
   .loop:
-    cmp [rdi], rax
+    cmp [rax + process_info.id], r8
     je .ret
-    add rdi, process_info.size
+    add rax, process_info.size
     jmp .loop
   .ret:
   ret
@@ -367,9 +372,9 @@ proc_struc_remove:
   cmp rax, processes
   jle .empty_list
 
-  mov rax, r8
   call proc_struc_find
 
+  mov rdi, rax
   mov rsi, rdi
   add rsi, process_info.size
   .loop:
