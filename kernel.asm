@@ -192,30 +192,38 @@ PUTS "Keyaboard set up successfully"
 pic_unmask 1
 
 
-mov r15, 1
-fork_loop:
-;; fork, children fork more, parents die
-test r15, r15
-jz is_parent
-cmp r15, -1
-je no_fork
+;; fork
+int 100
 
-;; as a child
+after_fork:
+
+test r15, r15
+jnz forked
+
+
+parent:
+PUTS "Printing from parent"
+hlt
+jmp parent
+
+forked:
+int 100
+test r15, r15
+jnz fork2
+
+parent2:
+PUTS "parent2"
+hlt
+jmp parent2
+
+fork2:
 push r15
 mov rbp, rsp
-PUTS "priting from process with id d"
+PUTS "fork2, d, hahahahaahahahahahahahahahah"
 add rsp, 8
-;fork again
-int 100
-jmp fork_loop
+hlt
+jmp fork2
 
-is_parent:
-PUTS "looping out the parent"
-jmp hang_machine
-
-no_fork:
-PUTS "couldn't fork"
-int 101
 
 
 hang_machine:
