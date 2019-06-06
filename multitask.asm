@@ -253,11 +253,13 @@ ll_fork_handler:
   inc r8
   mov [last_pid], r8
   call pid_queue_add
+  mov r15, r8
+  push r15 ;; push a new pid instead of what was in it
+
+  ;; now test if there was error when adding
   test rax, rax
   jz .no_fork
 
-  mov r15, r8
-  push r15 ;; push a new pid instead of what was in it
 
   ;; get stack page of current proc
   mov r8, [current_pid]
