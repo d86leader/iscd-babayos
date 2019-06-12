@@ -17,7 +17,7 @@ global keyboard_handler
 ;; Write a command to keyboard buffer
 ; kb_write {{{
 ;; ARGS
-;;  rsi - command byte
+;;  r8 - command byte
 ;; MODIFIES rax
 kb_write:
  .wait:
@@ -27,9 +27,9 @@ kb_write:
   test al, 1 ;; flag: output buffer full
   jnz .wait
 
- xchg rax, rsi
+ xchg rax, r8
  out PS_DATA, al
- xchg rax, rsi
+ xchg rax, r8
 
  ret
 
@@ -61,6 +61,8 @@ kb_read:
 
 
 ; initialize_ps2 {{{
+;; SUBROUTINE
+;; MODIFIES rax
 initialize_ps2:
  ;; enable keyboard
  mov al, 0xae
@@ -92,6 +94,7 @@ keyboard_handler:
  jz .return
 
  in al, PS_DATA
+ mov r8, rax
  call nr2char
  cmp al, 255
  je .return
@@ -119,9 +122,17 @@ keyboard_handler:
 
 ; nr2char {{{
 ;; ARGS
-;;    rax - keycode
+;;    r8 - keycode
 ;; RETURNS rax - char
 nr2char:
+  cmp r8, .mapped
+  jg .bad_code
+  mov al, [.keycodes + r8]
+  ret
+
+  .bad_code:
+  mov al, 255
+  ret
 
  section .data
   .keycodes:
@@ -133,12 +144,4 @@ nr2char:
   .mapped equ $ - .keycodes
 
  section .text
-  cmp rax, .mapped
-  jg .bad_code
-  mov al, [.keycodes + rax]
-  ret
-
-  .bad_code:
-  mov al, 255
-  ret
 ; }}}
