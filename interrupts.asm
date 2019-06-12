@@ -15,22 +15,24 @@ section .text
 ;; sets the handler for n-th interrupt to given address
 ; set_int_handler {{{
 ;; ARGS
-;;    rsi - address of handler
-;;    rdi - number of handler
+;;    r8 - address of handler
+;;    r9 - number of interrupt vector
 ;; modifies eax
 set_int_handler:
+ mov rdi, r9
  shl rdi, 4
  add rdi, plain_idt
 
- mov rax, rsi
+ mov rax, r8
  and rax, 0xffff
  mov [rdi + idt_entry.offset16], ax
 
- shr rsi, 16
- mov [rdi + idt_entry.offset32], si
+ mov rax, r8
+ shr rax, 16
+ mov [rdi + idt_entry.offset32], ax
 
- shr rsi, 16
- mov [rdi + idt_entry.offset64], esi
+ shr rax, 16
+ mov [rdi + idt_entry.offset64], eax
 
  ret
 ; }}}
@@ -43,19 +45,19 @@ set_int_handler:
 setup_handlers:
   mov rcx, 256
   handler_set_loop:
-   mov rsi, stub_handler
-   mov rdi, rcx
+   mov r8, stub_handler
+   mov r9, rcx
    call set_int_handler
    loop handler_set_loop
 
  call setup_device_handlers
 
- mov rsi, fork_handler
- mov rdi, 100
+ mov r8, fork_handler
+ mov r9, 100
  call set_int_handler
 
- mov rsi, kill_handler
- mov rdi, 101
+ mov r8, kill_handler
+ mov r9, 101
  call set_int_handler
 
  ret

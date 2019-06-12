@@ -50,20 +50,20 @@ initialize_pit:
 ;; SUBROUTINE
 ;; modifies rax, rdi, rsi
 setup_device_handlers:
-  mov rsi, base_pit_handler
-  mov rdi, 32
+  mov r8, base_pit_handler
+  mov r9, 32
   call set_int_handler
 
-  mov rsi, base_keyboard_handler
-  mov rdi, 33
+  mov r8, base_keyboard_handler
+  mov r9, 33
   call set_int_handler
 
-  mov rsi, page_fault_handler
-  mov rdi, 14
+  mov r8, page_fault_handler
+  mov r9, 14
   call set_int_handler
 
-  mov rsi, gp_handler
-  mov rdi, 13
+  mov r8, gp_handler
+  mov r9, 13
   call set_int_handler
 
   ret
