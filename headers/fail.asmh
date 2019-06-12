@@ -10,7 +10,7 @@ extern putstr
 %macro fail_with 1
   section .text
 
-  mov rsi, %%fail_message
+  mov r8, %%fail_message
   call putstr_64
 
   %%hang_ptr:

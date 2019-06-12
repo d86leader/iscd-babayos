@@ -8,16 +8,40 @@ extern putstr_current_line
 
 
 ; macro puts {{{
-%macro PUTS 1
+%macro PUTS 1-*
+ jmp %%code
+
  section .data
   %%str: db %1, 0
  section .text
+ %%code:
+
   %if __BITS__ == 32
     mov esi, %%str
+    call putstr_32
   %else
-    mov rsi, %%str
+
+    push r8
+
+    %if %0 > 1
+      push r9
+      %rep %0 - 1
+        push %2
+        %rotate 1
+      %endrep
+      mov r9, rsp
+    %endif
+
+    mov r8, %%str
+    call putstr_64
+
+    %if %0 > 1
+      add rsp, (%0 - 1) * 8
+      pop r9
+    %endif
+    pop r8
+
   %endif
-  call putstr_%[__BITS__]
 %endmacro
 ; }}}
 
@@ -35,10 +59,12 @@ extern putstr_current_line
   push rdx
   push rsi
   push rdi
+  push rbp
 
-  mov rsi, %%str
+  mov r8, %%str
   call putstr_64
 
+  pop rbp
   pop rdi
   pop rsi
   pop rdx

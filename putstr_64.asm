@@ -9,8 +9,8 @@ extern putstr_current_line
 section .text
 ; putstr {{{
 ;; ARGS
-;;    rsi - string to put, 0-terminated
-;;    rbp - any arguments to format
+;;    r8 - string to put, 0-terminated
+;;    r9 - any arguments to format
 ;; modifies
 ;;    rax - current symbol
 ;;    rbx - current colour
@@ -18,10 +18,14 @@ section .text
 ;;    rdx - function to call / its return code
 ;;    rsi - pointer to source string
 ;;    rdi - pointer to destination screen
+;;    rbp - format string args
 putstr_64:
  ;; disable interrupts while printing to avoid bad state
  pushfq
  cli
+
+ mov rsi, r8
+ mov rbp, r9
 
  xor rdi, rdi
  mov edi, [putstr_current_line]

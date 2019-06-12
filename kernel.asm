@@ -146,12 +146,9 @@ pop r8 ;; pointer to pd_0
 pop r9 ;; pointer to new page
 pop r10 ;; pointer to first unmapped memory
 
-push r10
-push r10
-mov rbp, rsp
-PUTS "Mapped d (0xx) bytes of memory for kernel"
-add rsp, 16
+PUTS "Mapped d (0xx) bytes of memory for kernel", r10, r10
 
+;; params are popped just above
 call set_stack_pages
 mov rsp, rax
 PUTS "Switched to a new stack"
@@ -201,10 +198,7 @@ cmp r15, -1
 je no_fork
 
 ;; as a child
-push r15
-mov rbp, rsp
-PUTS "priting from process with id d"
-add rsp, 8
+PUTS "priting from process with id d", r15
 ;fork again
 int 100
 jmp fork_loop

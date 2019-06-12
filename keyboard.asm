@@ -97,7 +97,7 @@ keyboard_handler:
  je .return
 
  mov [.char], al
- mov rsi, .good_char_str
+ mov r8, .good_char_str
  call putstr_64
 
  .return:
