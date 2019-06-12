@@ -47,6 +47,9 @@ initialize_pit:
 ;; SUBROUTINE
 ;; modifies rax, rdi, rsi
 setup_device_handlers:
+  push r8
+  push r9
+
   mov r8, base_pit_handler
   mov r9, 32
   call set_int_handler
@@ -63,6 +66,8 @@ setup_device_handlers:
   mov r9, 13
   call set_int_handler
 
+  pop r9
+  pop r8
   ret
 ; }}}
 
