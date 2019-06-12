@@ -72,9 +72,6 @@ pit_handler:
 
 
   ;; print a message each 32 ticks of counter
-  section .data
-    .own_counter: dw 0
-  section .text
   mov si, [.own_counter]
   test si, si
   jnz .counter_not_zero ;; if counter flag is nonzero, do nothing
@@ -101,6 +98,10 @@ pit_handler:
   push rax
   end_of_interrupt 0
   jmp leave_thread_from_pit
+
+  section .data
+    .own_counter: dw 0
+  section .text
 ; }}}
 
 

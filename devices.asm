@@ -97,31 +97,33 @@ base_keyboard_handler:
 
 ; page_fault_handler {{{
 page_fault_handler:
+ cli
+ mov r9, rsp ;; we have error code and rip saved on stack already. Pass them
+             ;; to putstr
+ mov r8, .msg
+ call putstr_64
+ .hang: jmp .hang
+
 section .data
  .msg: db "Caught page fault with errcode 0x", 27, 'x'
        db " with instruction at address 0x", 27, 'x'
        db ". Stopping", 0
 section .text
- cli
- mov r9, rsp ;; we have error code and rip saved on stack already. Pass them
-             ;; to putstr
- mov r8, .msg
- call putstr_64
- .hang: jmp .hang
  ; }}}
 
 
 ; gp_handler {{{
 gp_handler:
-section .data
- .msg: db "Caught general protection failure with errcode 0x", 27, 'x'
-       db " with instruction at address 0x", 27, 'x'
-       db ". Stopping", 0
-section .text
  cli
  mov r9, rsp ;; we have error code and rip saved on stack already. Pass them
              ;; to putstr
  mov r8, .msg
  call putstr_64
  .hang: jmp .hang
+
+section .data
+ .msg: db "Caught general protection failure with errcode 0x", 27, 'x'
+       db " with instruction at address 0x", 27, 'x'
+       db ". Stopping", 0
+section .text
  ; }}}
