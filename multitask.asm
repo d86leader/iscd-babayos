@@ -181,7 +181,7 @@ enter_thread:
   mov rsp, [rdi + process_info.sp]
 
 ;  mov r8, [rdi + process_info.stack_page]
-;  mov rax, .finalize
+;  mov r9, .finalize
 ;  jmp change_stack_page
 
  .finalize:

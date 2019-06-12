@@ -223,11 +223,12 @@ create_stack_page:
 ; change_stack_page {{{
 ;; ARGS
 ;;    r8 - what address to put
-;;    rax - where to return
-;; MODIFIES: rdi, r8
+;;    r9 - where to return
+;; MODIFIES: rdi, rax
 change_stack_page:
   mov rdi, [stack_page_table]
-  or r8, 11b ;; write | present
-  mov [rdi], r8
-  jmp rax
+  mov rax, r8
+  or rax, 11b ;; write | present
+  mov [rdi], rax
+  jmp r9
 ; }}}
