@@ -45,6 +45,9 @@ setup_init:
 pit_handler:
  push rsi
  push rdi
+ push r8
+ push r9
+ push rax
 
 ;; decrement all counters
  mov rsi, pit_counters
@@ -79,21 +82,17 @@ pit_handler:
     SAFE_PUTS "pit handler's own 32 tick timeout"
     mov byte [.own_counter], byte 0xff
     ;; start new countdown
-    push r9
-    push r10
-    push rax
-
     mov r8, 32
     mov r9, .own_counter
     call add_counter
 
-    pop rax
-    pop r10
-    pop r9
   .counter_not_zero:
 
   ;; leave current thread
 
+  pop rax
+  pop r9
+  pop r8
   pop rdi
   pop rsi
   add rsp, 8 ;; account for own return address
