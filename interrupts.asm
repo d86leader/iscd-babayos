@@ -86,7 +86,7 @@ kill_handler:
 ;; interrupt masks
 ; initialize_pic {{{
 ;; ARGS
-;;    rsi - first interrupt vector to be used by pics
+;;    r8 - first interrupt vector to be used by pics
 ;;    r9  - mask for first pic
 ;;    r10 - mask for second pic
 ;; modifies rax
@@ -103,7 +103,7 @@ initialize_pic:
  out PIC2_COMMAND, al
 
  ;; tell desired offsets
- mov ax, si
+ mov ax, r8w
  out PIC1_DATA, al
  add al, 8
  out PIC2_DATA, al

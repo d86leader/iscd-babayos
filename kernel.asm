@@ -166,7 +166,7 @@ PUTS "Succesfully loaded idtd"
 ;; PIC initialization
 
 ;; irqs start at 0x20 = 32
-mov rsi, 32
+mov r8, 32
 ;; ignore all interrupts
 mov r9, 0xff
 mov r10, 0xff
