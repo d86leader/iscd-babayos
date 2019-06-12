@@ -3,9 +3,6 @@
 %define DEVICES_H
 
 extern initialize_pit
-extern pit_handler
-extern page_fault_handler
-extern gp_handler
 extern setup_device_handlers
 
 

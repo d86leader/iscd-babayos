@@ -4,9 +4,6 @@
 ;; And subroutines to initialize them
 
 global initialize_pit
-global pit_handler
-global page_fault_handler
-global gp_handler
 global setup_device_handlers
 
 %include "headers/interrupts.asmh"
